@@ -59,6 +59,37 @@ The panel is at http://127.0.0.1:4317 while a run is going. To look at old runs:
 Auth: with no `ANTHROPIC_API_KEY` the SDK uses the Claude Code login (Team seat, subject to the
 5-hour window). Setting the key switches auth; no code change.
 
+## v2: the self-improving loop (`evolve.ts`)
+
+`run.ts` stops when the planner's criteria pass, so the planner's first guess is the ceiling.
+`evolve.ts` treats the spec as a floor and keeps raising it:
+
+- **Replan.** When every hard criterion passes, or every `--replan-every` rounds: a researcher
+  (web search) works through a lens the loop picks, plus a random far-away analogy; an outsider
+  reads only screenshots and argues against the direction; the replanner appends up to
+  `--max-new-criteria` criteria, each with its source idea. `guardSpec` restores any edit to an
+  existing criterion.
+- **Anti-convergence.** `research/obvious.md` (a cold model's default answers) tags obvious ideas;
+  `research/ledger.md` forbids repeating a question or source; lenses rotate (`agents/lenses.ts`).
+- **Ratchet.** Hard criteria that passed once must keep passing. One round of grace, then the app
+  code is reverted to the last good commit.
+- **Design track.** Every `--design-every` rounds: K directions, K designers in parallel git
+  worktrees, a photographer, and two pairwise judges (craft and character). The winner is merged
+  only if it beats the current design.
+- **User agent.** Timed realistic tasks (`research/tasks.json`) checked by shell commands. Tasks
+  that used to work and now fail go back to the generator as usability regressions.
+- **Stops.** Only the budget (`--budget-usd`, estimated), `--max-rounds`, or two empty replans in a
+  row. The 5-hour window (`--window-cap`) pauses the loop until reset; a locked screen pauses it
+  until unlock, and QA taken on a locked screen is redone. `caffeinate` keeps the display awake.
+- **You.** Every `--checkpoint-every` rounds a page lands in `runs/<id>/checkpoints/`. Write
+  `veto I-3-2: reason`, `note: …` or `pick design r4-2` into `runs/<id>/feedback.md` whenever you
+  like; the loop reads it at the next round and never waits for it.
+
+```bash
+cd orchestrator
+node evolve.ts --from-run run1 --run-id evo1 --max-rounds 20 --budget-usd 60
+```
+
 ## Things that are easy to get wrong
 
 - **Connector tools.** Without `strictMcpConfig`, the user's claude.ai connectors (Notion, Slack,
