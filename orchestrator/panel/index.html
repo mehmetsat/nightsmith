@@ -1,0 +1,1052 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harness Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: oklch(97.6% 0.008 85); --paper-2: oklch(94.8% 0.012 85); --paper-3: oklch(91.5% 0.014 85);
+  --ink: oklch(24% 0.02 70); --ink-2: oklch(43% 0.02 70); --ink-3: oklch(60% 0.016 75);
+  --rule: oklch(88% 0.012 80); --rule-2: oklch(82% 0.014 80);
+  --planner: oklch(68% 0.13 82); --generator: oklch(61% 0.15 45); --evaluator: oklch(50% 0.13 265); --orchestrator: oklch(55% 0.035 150);
+  --pass: oklch(57% 0.12 152); --fail: oklch(54% 0.19 20); --manual: oklch(74% 0.03 80); --warn: oklch(70% 0.14 75);
+  --live: oklch(63% 0.16 148);
+  --serif: "Newsreader", "Iowan Old Style", Georgia, serif;
+  --sans: "Geist", -apple-system, "Helvetica Neue", sans-serif;
+  --mono: "Geist Mono", ui-monospace, Menlo, monospace;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --gutter: clamp(16px, 3vw, 40px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: oklch(19% 0.012 70); --paper-2: oklch(22.5% 0.013 70); --paper-3: oklch(26.5% 0.014 70);
+    --ink: oklch(93% 0.012 85); --ink-2: oklch(76% 0.014 80); --ink-3: oklch(58% 0.014 75);
+    --rule: oklch(30% 0.012 70); --rule-2: oklch(36% 0.014 70);
+    --planner: oklch(76% 0.13 82); --generator: oklch(70% 0.14 48); --evaluator: oklch(70% 0.12 268); --orchestrator: oklch(68% 0.035 150);
+    --pass: oklch(70% 0.13 152); --fail: oklch(66% 0.17 22); --manual: oklch(52% 0.02 80);
+  }
+}
+:root[data-theme="dark"] {
+  --paper: oklch(19% 0.012 70); --paper-2: oklch(22.5% 0.013 70); --paper-3: oklch(26.5% 0.014 70);
+  --ink: oklch(93% 0.012 85); --ink-2: oklch(76% 0.014 80); --ink-3: oklch(58% 0.014 75);
+  --rule: oklch(30% 0.012 70); --rule-2: oklch(36% 0.014 70);
+  --planner: oklch(76% 0.13 82); --generator: oklch(70% 0.14 48); --evaluator: oklch(70% 0.12 268); --orchestrator: oklch(68% 0.035 150);
+  --pass: oklch(70% 0.13 152); --fail: oklch(66% 0.17 22); --manual: oklch(52% 0.02 80);
+}
+* { box-sizing: border-box; }
+html { background: var(--paper); }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 14px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+button, select, input { font: inherit; color: inherit; }
+.num { font-variant-numeric: tabular-nums; }
+.mono { font-family: var(--mono); font-size: 12px; }
+.muted { color: var(--ink-3); }
+.wrap { max-width: 1560px; margin: 0 auto; padding: 0 var(--gutter); }
+
+/* Masthead */
+.mast { border-bottom: 1px solid var(--rule-2); padding: 22px 0 18px; position: sticky; top: 0; z-index: 5; background: color-mix(in oklch, var(--paper) 92%, transparent); backdrop-filter: blur(10px); }
+.mast { transition: padding .25s var(--ease); }
+.mast.compact { padding: 10px 0 10px; }
+.mast.compact .eyebrow, .mast.compact .reason, .mast.compact .fig dt { display: none; }
+.mast.compact .run-title h1 { font-size: 24px; }
+.mast.compact .fig dd { font-size: 16px; }
+.mast.compact .track { margin-top: 8px; }
+.mast-top { display: flex; align-items: flex-end; gap: 28px; flex-wrap: wrap; }
+.eyebrow { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; }
+.run-title { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.run-title h1 { font: 500 clamp(28px, 3.4vw, 44px)/1 var(--serif); letter-spacing: -.01em; margin: 0; display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.run-title select { field-sizing: content; appearance: none; border: 0; background: transparent; font: inherit; letter-spacing: inherit; padding: 0 22px 0 0; cursor: pointer; max-width: 70vw; text-overflow: ellipsis;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-3) 50%), linear-gradient(-45deg, transparent 50%, var(--ink-3) 50%);
+  background-size: 6px 6px; background-position: right 8px center, right 2px center; background-repeat: no-repeat; }
+.status { font: 500 13px/1 var(--sans); display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px 6px 9px; border-radius: 99px; background: var(--paper-2); color: var(--ink-2); white-space: nowrap; }
+.status i { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); }
+.status.running i { background: var(--live); box-shadow: 0 0 0 0 color-mix(in oklch, var(--live) 60%, transparent); animation: pulse 1.8s var(--ease) infinite; }
+.status.done { background: color-mix(in oklch, var(--pass) 16%, var(--paper)); color: var(--pass); } .status.done i { background: var(--pass); }
+.status.bad { background: color-mix(in oklch, var(--fail) 13%, var(--paper)); color: var(--fail); } .status.bad i { background: var(--fail); }
+@keyframes pulse { 70% { box-shadow: 0 0 0 7px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+.reason { font: italic 400 15px/1.3 var(--serif); color: var(--ink-2); margin-top: 6px; }
+.figures { display: flex; gap: clamp(18px, 2.4vw, 36px); margin-left: auto; flex-wrap: wrap; }
+.fig dt { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.fig dd { margin: 2px 0 0; font: 500 20px/1.1 var(--sans); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.fig dd small { font-size: 12px; color: var(--ink-3); font-weight: 400; margin-left: 3px; }
+.mast-top { position: relative; padding-right: 44px; }
+.theme { position: absolute; right: 0; top: 0; border: 1px solid var(--rule-2); background: transparent; border-radius: 99px; width: 30px; height: 30px; cursor: pointer; color: var(--ink-2); }
+.theme:hover { background: var(--paper-2); }
+
+/* Round track */
+.track { display: flex; gap: 6px; margin-top: 16px; align-items: stretch; overflow-x: auto; scrollbar-width: none; }
+.track .seg { flex: 1 1 0; min-width: 92px; max-width: 220px; border-top: 3px solid var(--rule-2); padding-top: 6px; font-size: 12px; color: var(--ink-3); position: relative; }
+.track .seg b { color: var(--ink); font-weight: 600; margin-right: 6px; }
+.track .seg .fill { position: absolute; top: -3px; left: 0; height: 3px; background: var(--pass); transition: width .6s var(--ease); }
+.track .seg.broken { border-top-color: var(--fail); }
+.track .seg.current b::after { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--live); margin-left: 6px; vertical-align: 2px; animation: pulse 1.8s infinite; }
+.track .seg.plan { max-width: 120px; }
+
+/* Sections */
+section.block { padding: clamp(26px, 3.2vw, 44px) 0 0; }
+.block-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 16px; flex-wrap: wrap; }
+.block-head h2 { font: 500 22px/1.1 var(--serif); margin: 0; letter-spacing: -.005em; }
+.block-head .idx { font: 500 11px var(--mono); color: var(--ink-3); }
+.block-head .aside { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.seg-btn { border: 1px solid var(--rule-2); background: transparent; border-radius: 99px; padding: 3px 11px; font-size: 12px; color: var(--ink-2); cursor: pointer; transition: background .2s var(--ease), color .2s var(--ease); }
+.seg-btn:hover { background: var(--paper-2); }
+.seg-btn.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.empty { color: var(--ink-3); font: italic 15px/1.4 var(--serif); padding: 18px 0; }
+
+/* Agents */
+.agents { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--rule); }
+.agent { padding: 18px 22px 20px; border-right: 1px solid var(--rule); min-width: 0; position: relative; transition: background .4s var(--ease); }
+.agent:first-child { padding-left: 0; } .agent:last-child { border-right: 0; padding-right: 0; }
+.agent.active { background: linear-gradient(to bottom, color-mix(in oklch, var(--c) 7%, transparent), transparent 70%); }
+.agent-name { display: flex; align-items: baseline; gap: 10px; }
+.agent-name h3 { margin: 0; font: 500 21px/1 var(--serif); text-transform: capitalize; }
+.agent-name h3::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--c); margin-right: 9px; vertical-align: 1px; }
+.agent-name .model { font: 12px var(--mono); color: var(--ink-3); margin-left: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.state { margin-top: 14px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); min-height: 20px; }
+.state .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-3); flex: none; }
+.state.tool .dot, .state.thinking .dot { background: var(--c); animation: pulse 1.6s infinite; }
+.state.done .dot { background: var(--pass); } .state.error .dot { background: var(--fail); }
+.state .tname { font-weight: 600; color: var(--ink); }
+.state .el { margin-left: auto; font: 12px var(--mono); color: var(--ink-3); }
+.cmd { font: 12.5px/1.45 var(--mono); color: var(--ink); background: var(--paper-2); border-radius: 6px; padding: 8px 10px; margin-top: 8px; min-height: 36px; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.recent { list-style: none; margin: 10px 0 0; padding: 0; font: 12px/1.7 var(--mono); color: var(--ink-3); }
+.recent li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.recent li b { color: var(--ink-2); font-weight: 500; }
+.said { margin: 12px 0 0; font: italic 15px/1.4 var(--serif); color: var(--ink-2); min-height: 2.8em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.agent-figs { display: flex; gap: 22px; margin-top: 14px; font-size: 12px; color: var(--ink-3); }
+.agent-figs b { display: block; font: 500 15px var(--sans); color: var(--ink); font-variant-numeric: tabular-nums; }
+.ctx { flex: 1; min-width: 80px; }
+.ctx .bar { height: 4px; background: var(--paper-3); border-radius: 2px; margin-top: 7px; overflow: hidden; }
+.ctx .bar i { display: block; height: 100%; background: var(--c); border-radius: 2px; transition: width .6s var(--ease); }
+
+/* Timeline */
+.timeline { position: relative; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 26px 0 26px; user-select: none; }
+.tl-row { display: grid; grid-template-columns: 96px 1fr; align-items: center; height: 34px; }
+.tl-label { font-size: 12px; color: var(--ink-2); text-transform: capitalize; display: flex; align-items: center; gap: 7px; }
+.tl-label i { width: 8px; height: 8px; border-radius: 2px; background: var(--c); }
+.tl-track { position: relative; height: 22px; background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), var(--rule) calc(10% - 1px) 10%); border-radius: 3px; }
+.tl-span { position: absolute; top: 9px; height: 4px; background: color-mix(in oklch, var(--c) 22%, transparent); border-radius: 2px; }
+.tl-blk { position: absolute; top: 2px; height: 18px; min-width: 2px; background: var(--c); border-radius: 2px; opacity: .85; transition: opacity .15s; cursor: default; }
+.tl-blk:hover { opacity: 1; outline: 2px solid var(--ink); outline-offset: 1px; z-index: 2; }
+.tl-blk.err { background: var(--fail); }
+.tl-marks { position: absolute; left: 96px; right: 0; top: 0; bottom: 0; pointer-events: none; }
+.tl-mark { position: absolute; top: 4px; bottom: 18px; border-left: 1px dashed var(--rule-2); }
+.tl-mark span { position: absolute; top: 6px; left: 5px; font-weight: 500; color: var(--ink-2); font: 11px var(--mono); color: var(--ink-3); white-space: nowrap; }
+.tl-now { position: absolute; top: 4px; bottom: 18px; border-left: 2px solid var(--live); }
+.tl-axis { position: absolute; left: 96px; right: 0; bottom: 4px; height: 14px; font: 10.5px var(--mono); color: var(--ink-3); }
+.tl-axis span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.tip { position: fixed; z-index: 30; pointer-events: none; background: var(--ink); color: var(--paper); font: 12px/1.45 var(--mono); padding: 8px 10px; border-radius: 6px; max-width: 420px; opacity: 0; transform: translateY(4px); transition: opacity .12s, transform .12s var(--ease); overflow-wrap: anywhere; }
+.tip.on { opacity: 1; transform: none; }
+.tip b { font-family: var(--sans); font-weight: 600; }
+
+/* Two-column rows */
+.cols { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: clamp(28px, 4vw, 64px); }
+
+/* Criteria matrix */
+.matrix { width: 100%; border-collapse: collapse; font-size: 13px; }
+.matrix th { font: 500 11px var(--mono); color: var(--ink-3); text-align: left; padding: 0 6px 8px; border-bottom: 1px solid var(--rule-2); white-space: nowrap; }
+.matrix th.r { text-align: center; width: 38px; }
+.matrix td { padding: 6px; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+.matrix tr.crit { cursor: pointer; transition: background .15s; }
+.matrix tr.crit:hover { background: var(--paper-2); }
+.matrix .cid { font: 500 12px var(--mono); white-space: nowrap; width: 46px; }
+.matrix .ctext { color: var(--ink-2); max-width: 0; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cell { display: block; margin: 0 auto; width: 22px; height: 22px; border-radius: 5px; background: var(--paper-3); position: relative; }
+.cell.PASS { background: var(--pass); } .cell.FAIL { background: var(--fail); } .cell.MANUAL { background: transparent; border: 1.5px dashed var(--manual); }
+.cell.flip::after { content: ""; position: absolute; right: -3px; top: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--ink); border: 2px solid var(--paper); }
+.matrix tr.detail td { background: var(--paper-2); padding: 12px 14px 14px; font-size: 13px; color: var(--ink-2); }
+.matrix tr.detail h4 { margin: 10px 0 3px; font: 500 11px var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.matrix tr.detail h4:first-child { margin-top: 0; }
+.matrix tr.detail p { margin: 0; overflow-wrap: anywhere; }
+.matrix tr.group td { padding: 16px 6px 6px; font: 500 11px var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); border-bottom: 1px solid var(--rule-2); }
+.matrix tfoot td { font: 500 12px var(--mono); color: var(--ink-2); text-align: center; border-bottom: 0; padding-top: 10px; }
+.legend { display: flex; gap: 14px; font-size: 12px; color: var(--ink-3); align-items: center; }
+.legend .cell { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 5px; }
+
+/* Cost + tools */
+.costchart { width: 100%; height: 190px; display: block; }
+.costchart text { font: 11px var(--mono); fill: var(--ink-3); }
+.costchart .tot { fill: var(--ink); font-weight: 500; }
+.costchart rect { transition: opacity .15s; }
+.costchart rect:hover { opacity: .75; }
+.keyline { display: flex; gap: 16px; font-size: 12px; color: var(--ink-3); margin: 6px 0 22px; flex-wrap: wrap; }
+.keyline i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; background: var(--c); margin-right: 6px; }
+.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; border-top: 1px solid var(--rule); padding-top: 14px; margin-bottom: 28px; }
+.facts div { font-size: 12px; color: var(--ink-3); } .facts b { display: block; font: 500 17px var(--sans); color: var(--ink); font-variant-numeric: tabular-nums; }
+.tools-agent { margin-bottom: 16px; }
+.tools-agent h4 { margin: 0 0 6px; font: 500 12px var(--sans); text-transform: capitalize; color: var(--ink-2); display: flex; gap: 8px; align-items: center; }
+.tools-agent h4 i { width: 8px; height: 8px; border-radius: 2px; background: var(--c); }
+.trow { display: grid; grid-template-columns: 116px 1fr 104px; gap: 10px; align-items: center; font-size: 12px; height: 22px; }
+.trow .tn { font-family: var(--mono); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trow .tb { height: 8px; background: var(--paper-3); border-radius: 2px; overflow: hidden; }
+.trow .tb i { display: block; height: 100%; background: var(--c); opacity: .8; border-radius: 2px; }
+.trow .tv { white-space: nowrap; text-align: right; color: var(--ink-3); font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 11.5px; }
+
+/* Filmstrip */
+.strip { display: flex; gap: 14px; overflow-x: auto; padding: 4px 0 14px; scroll-snap-type: x proximity; }
+.shot { flex: none; scroll-snap-align: start; cursor: zoom-in; width: 210px; border: 0; background: none; padding: 0; text-align: left; }
+.shot .img { height: 140px; border-radius: 6px; background: var(--paper-2) center/contain no-repeat; border: 1px solid var(--rule); position: relative; overflow: hidden; transition: transform .3s var(--ease), border-color .2s; }
+.shot:hover .img { transform: translateY(-2px); border-color: var(--rule-2); }
+.shot .img .n { position: absolute; right: 6px; bottom: 6px; font: 500 11px var(--mono); background: var(--ink); color: var(--paper); padding: 2px 6px; border-radius: 4px; }
+.shot .cap { font-size: 12px; color: var(--ink-3); margin-top: 6px; display: flex; gap: 6px; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.shot .cap i { width: 7px; height: 7px; border-radius: 2px; background: var(--c); flex: none; }
+.lightbox { position: fixed; inset: 0; z-index: 40; background: color-mix(in oklch, var(--paper) 88%, black); display: none; flex-direction: column; }
+.lightbox.on { display: flex; animation: fade .25s var(--ease); }
+@keyframes fade { from { opacity: 0; } }
+.lb-bar { display: flex; align-items: center; gap: 14px; padding: 14px var(--gutter); font-size: 13px; color: var(--ink-2); }
+.lb-bar .t { font: 500 17px var(--serif); color: var(--ink); }
+.lb-bar button { margin-left: auto; }
+.lb-stage { flex: 1; display: flex; align-items: center; justify-content: center; padding: 0 var(--gutter); min-height: 0; }
+.lb-stage img { max-width: 100%; max-height: 100%; border-radius: 8px; box-shadow: 0 20px 60px -20px rgb(0 0 0 / .35); }
+.lb-frames { display: flex; gap: 6px; justify-content: center; padding: 14px var(--gutter) 20px; overflow-x: auto; }
+.lb-frames img { height: 64px; border-radius: 4px; opacity: .5; cursor: pointer; border: 2px solid transparent; }
+.lb-frames img.on { opacity: 1; border-color: var(--ink); }
+
+/* Artifacts */
+.doc { border: 1px solid var(--rule); border-radius: 8px; max-height: 560px; overflow: auto; background: var(--paper); }
+.dl { display: grid; grid-template-columns: 44px 16px 1fr; font: 12.5px/1.6 var(--mono); }
+.dl span { padding: 0 6px; }
+.dl .ln { text-align: right; color: var(--ink-3); user-select: none; border-right: 1px solid var(--rule); }
+.dl .g { text-align: center; color: var(--ink-3); user-select: none; }
+.dl .tx { white-space: pre-wrap; overflow-wrap: anywhere; padding-right: 12px; }
+.dl.a { background: color-mix(in oklch, var(--pass) 12%, transparent); } .dl.a .g { color: var(--pass); }
+.dl.d { background: color-mix(in oklch, var(--fail) 10%, transparent); } .dl.d .g { color: var(--fail); } .dl.d .tx { text-decoration: line-through; text-decoration-color: color-mix(in oklch, var(--fail) 50%, transparent); }
+.dl.h .tx { font-weight: 600; color: var(--ink); }
+.diffstat { font: 12px var(--mono); color: var(--ink-3); } .diffstat .p { color: var(--pass); } .diffstat .m { color: var(--fail); }
+
+/* Log */
+.logtools { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.logtools input { flex: 1; min-width: 140px; border: 1px solid var(--rule-2); background: var(--paper); border-radius: 6px; padding: 5px 10px; font-size: 13px; }
+.logtools input:focus { outline: 2px solid color-mix(in oklch, var(--ink) 30%, transparent); outline-offset: 1px; }
+.log { max-height: 560px; overflow: auto; border-top: 1px solid var(--rule); font: 12px/1.5 var(--mono); }
+.lrow { display: grid; grid-template-columns: 62px 84px 102px minmax(0, 1fr); gap: 8px; padding: 4px 2px; border-bottom: 1px solid var(--rule); cursor: pointer; }
+.lrow:hover { background: var(--paper-2); }
+.lrow .ag { color: var(--c); font-weight: 500; text-transform: capitalize; }
+.lrow .ty { color: var(--ink-3); }
+.lrow .sm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink-2); }
+.lrow .sm b { color: var(--ink); font-weight: 500; margin-right: 6px; }
+.lrow.err .ty, .lrow.err .sm { color: var(--fail); }
+.lrow.mile { background: color-mix(in oklch, var(--ink) 4%, transparent); }
+.lrow.mile .sm { color: var(--ink); font-weight: 500; }
+.lpay { grid-column: 1 / -1; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink-2); background: var(--paper-2); padding: 8px 10px; border-radius: 6px; margin: 2px 0 6px; max-height: 300px; overflow: auto; cursor: text; }
+.lpay a { color: var(--evaluator); }
+
+footer { padding: 40px 0 50px; color: var(--ink-3); font-size: 12px; }
+
+/* Flow graph */
+.flow-wrap { position: relative; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+  background: radial-gradient(ellipse 60% 70% at 50% 52%, color-mix(in oklch, var(--paper-3) 55%, transparent), transparent 75%); }
+#flow { width: 100%; height: auto; display: block; max-height: 560px; }
+.f-edge { fill: none; stroke: var(--rule-2); stroke-width: 1.3; transition: stroke .6s var(--ease), stroke-width .6s var(--ease), opacity .6s; }
+.f-edge.ctl { stroke-dasharray: 1.5 5; stroke-linecap: round; }
+.f-edge.report { stroke-dasharray: 7 5; }
+.f-edge.lit { stroke: var(--lc); stroke-width: 2.4; opacity: 1; }
+.f-node { cursor: default; }
+.f-node .shape { transform-box: fill-box; transform-origin: center; transition: fill .4s, stroke .4s; }
+.f-node.hit .shape { animation: hit .7s var(--ease); }
+@keyframes hit { 30% { transform: scale(1.09); } }
+.f-agent .core { fill: color-mix(in oklch, var(--c) 13%, var(--paper)); stroke: var(--c); stroke-width: 1.6; }
+.f-agent.idle .core { fill: var(--paper); stroke: var(--rule-2); }
+.f-agent.done .core { fill: color-mix(in oklch, var(--c) 8%, var(--paper)); }
+.f-agent .ini { font: italic 500 26px var(--serif); fill: var(--c); text-anchor: middle; dominant-baseline: central; }
+.f-agent.idle .ini { fill: var(--ink-3); }
+.f-agent .ring { fill: none; stroke: var(--c); stroke-width: 2; stroke-dasharray: 5 9; stroke-linecap: round; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.f-agent.active .ring { opacity: 1; animation: spin 7s linear infinite; }
+.f-agent .halo { fill: var(--c); opacity: 0; transform-box: fill-box; transform-origin: center; }
+.f-agent.active .halo { animation: halo 2.2s var(--ease) infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes halo { 0% { opacity: .22; transform: scale(.95); } 100% { opacity: 0; transform: scale(1.75); } }
+.f-agent .count { font: 500 10.5px var(--mono); fill: var(--ink-3); text-anchor: middle; }
+.f-label { font: 500 16px var(--serif); fill: var(--ink); text-anchor: middle; }
+.f-sub { font: 11px var(--mono); fill: var(--ink-3); text-anchor: middle; }
+.f-sub.on { fill: var(--ink); font-weight: 500; }
+.f-orch .box { fill: var(--ink); }
+.f-orch .t1 { font: 500 15px var(--serif); fill: var(--paper); text-anchor: middle; }
+.f-orch .t2 { font: 11px var(--mono); fill: color-mix(in oklch, var(--paper) 72%, var(--ink)); text-anchor: middle; }
+.f-orch .beat { fill: var(--live); }
+.f-orch.running .beat { animation: beat 1.6s var(--ease) infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes beat { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+.f-file .doc { fill: var(--paper); stroke: var(--rule-2); stroke-width: 1.2; }
+.f-file .fold { fill: var(--paper-3); }
+.f-file.fresh .doc { stroke: var(--ink-2); }
+.f-file .fn { font: 500 12px var(--mono); fill: var(--ink); }
+.f-file .fm { font: 10.5px var(--mono); fill: var(--ink-3); }
+.f-file.empty .fn { fill: var(--ink-3); }
+.f-app .frame { fill: var(--paper-2); stroke: var(--rule-2); stroke-width: 1.2; }
+.f-app.ok .frame { stroke: var(--pass); } .f-app.broken .frame { stroke: var(--fail); stroke-width: 2; }
+.f-app .bar { fill: var(--paper-3); }
+.f-app .light { opacity: .9; }
+.f-app .badge { font: 500 10.5px var(--mono); }
+.f-app.ok .badge { fill: var(--pass); } .f-app.broken .badge { fill: var(--fail); } .f-app .badge { fill: var(--ink-3); }
+.f-app .ph { font: italic 13px var(--serif); fill: var(--ink-3); text-anchor: middle; }
+.f-part circle { fill: var(--pc); }
+.f-part text { font: 600 11px var(--mono); fill: var(--pc); paint-order: stroke; stroke: var(--paper); stroke-width: 4px; text-anchor: middle; }
+.flow-foot { display: flex; gap: 22px; align-items: flex-start; justify-content: space-between; padding: 10px 0 12px; flex-wrap: wrap; }
+.ticker { list-style: none; margin: 0; padding: 0; font: 12px/1.65 var(--mono); color: var(--ink-3); min-height: 5em; flex: 1; min-width: 260px; }
+.ticker li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ticker li.new { animation: tin .5s var(--ease); }
+.ticker li:first-child { color: var(--ink); }
+.ticker li b { color: var(--c); font-weight: 500; }
+@keyframes tin { from { opacity: 0; transform: translateY(-4px); } }
+.flow-key { display: flex; gap: 16px; font-size: 12px; color: var(--ink-3); align-items: center; flex-wrap: wrap; }
+.flow-key svg { vertical-align: middle; margin-right: 6px; }
+.replay-clock { font: 12px var(--mono); color: var(--ink-2); }
+.replay-clock.on::before { content: "● "; color: var(--fail); }
+
+@media (max-width: 1100px) { .cols { grid-template-columns: 1fr; } }
+@media (max-width: 860px) {
+  .agents { grid-template-columns: 1fr; }
+  .agent, .agent:first-child, .agent:last-child { padding: 16px 0; border-right: 0; border-bottom: 1px solid var(--rule); }
+  .figures { margin-left: 0; width: 100%; }
+  .tl-row { grid-template-columns: 72px 1fr; } .tl-marks, .tl-axis { left: 72px; }
+  .facts { grid-template-columns: 1fr 1fr; }
+  .lrow { grid-template-columns: 56px 76px minmax(0, 1fr); } .lrow .ty { display: none; }
+  .mast { position: static; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<header class="mast">
+  <div class="wrap">
+    <div class="mast-top">
+      <div class="run-title">
+        <span class="eyebrow">Harness run</span>
+        <h1><select id="run" aria-label="Run"></select><span class="status" id="status"><i></i><span>connecting</span></span></h1>
+        <div class="reason" id="reason"></div>
+      </div>
+      <dl class="figures">
+        <div class="fig"><dt>Cost</dt><dd id="f-cost">$0</dd></div>
+        <div class="fig"><dt>Tokens</dt><dd id="f-tok">0</dd></div>
+        <div class="fig"><dt>Tool calls</dt><dd id="f-tools">0</dd></div>
+        <div class="fig"><dt>Elapsed</dt><dd id="f-time">0s</dd></div>
+      </dl>
+      <button class="theme" id="theme" title="Toggle theme" aria-label="Toggle theme">◐</button>
+    </div>
+    <div class="track" id="track"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="block">
+    <div class="block-head"><span class="idx">00</span><h2>Flow</h2>
+      <span class="replay-clock" id="replayclock"></span>
+      <div class="aside" id="replay">
+        <button class="seg-btn on" data-r="live">Live</button><button class="seg-btn" data-r="20">Replay 20×</button><button class="seg-btn" data-r="60">60×</button><button class="seg-btn" data-r="200">200×</button>
+      </div>
+    </div>
+    <div class="flow-wrap"><svg id="flow" viewBox="0 0 1120 500" role="img" aria-label="Agents, files and the app, with live activity"></svg></div>
+    <div class="flow-foot">
+      <ul class="ticker" id="ticker"></ul>
+      <div class="flow-key">
+        <span><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="var(--rule-2)" stroke-width="1.5"/></svg>reads / writes</span>
+        <span><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="var(--rule-2)" stroke-width="1.5" stroke-dasharray="7 5"/></svg>reports to</span>
+        <span><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="var(--rule-2)" stroke-width="1.8" stroke-dasharray="1.5 5" stroke-linecap="round"/></svg>starts / runs</span>
+        <span><svg width="12" height="12"><circle cx="6" cy="6" r="4" fill="var(--generator)"/></svg>live event</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head"><span class="idx">01</span><h2>Agents</h2><span class="aside muted" id="models"></span></div>
+    <div class="agents" id="agents"></div>
+  </section>
+
+  <section class="block">
+    <div class="block-head"><span class="idx">02</span><h2>Timeline</h2>
+      <div class="aside" id="tlzoom">
+        <button class="seg-btn on" data-z="all">Whole run</button><button class="seg-btn" data-z="30">30 min</button><button class="seg-btn" data-z="5">5 min</button>
+      </div>
+    </div>
+    <div class="timeline" id="timeline"><div class="empty">The timeline fills in as agents call tools.</div></div>
+  </section>
+
+  <section class="block cols">
+    <div>
+      <div class="block-head"><span class="idx">03</span><h2>Criteria</h2>
+        <div class="aside">
+          <span class="legend"><span><span class="cell PASS"></span>pass</span><span><span class="cell FAIL"></span>fail</span><span><span class="cell MANUAL"></span>manual</span><span><span class="cell flip" style="background:var(--paper-3)"></span>changed</span></span>
+        </div>
+      </div>
+      <div class="logtools" id="critfilter">
+        <button class="seg-btn on" data-f="all">All</button><button class="seg-btn" data-f="hard">Hard</button><button class="seg-btn" data-f="soft">Soft</button><button class="seg-btn" data-f="manual">Manual</button><button class="seg-btn" data-f="failing">Failing now</button><button class="seg-btn" data-f="changed">Changed</button>
+      </div>
+      <div id="criteria"><div class="empty">Criteria appear once the planner writes spec.md.</div></div>
+    </div>
+    <div>
+      <div class="block-head"><span class="idx">04</span><h2>Spend</h2></div>
+      <div id="cost"><div class="empty">No spend yet.</div></div>
+      <div class="block-head" style="margin-top:8px"><span class="idx">05</span><h2>Tools</h2></div>
+      <div id="tools"><div class="empty">No tool calls yet.</div></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head"><span class="idx">06</span><h2>Screenshots</h2><span class="aside" id="shotfilter"></span></div>
+    <div class="strip" id="strip"><div class="empty">Window screenshots and frame captures from the agents land here, newest first.</div></div>
+  </section>
+
+  <section class="block cols">
+    <div>
+      <div class="block-head"><span class="idx">07</span><h2>Handoff files</h2><span class="aside" id="artmode"><button class="seg-btn on" data-m="diff">Diff</button><button class="seg-btn" data-m="full">Full</button></span></div>
+      <div class="logtools" id="arttabs"></div>
+      <div class="doc" id="doc"><div class="empty" style="padding:18px">spec.md, handoff.md and qa_report.md appear here as agents write them.</div></div>
+    </div>
+    <div>
+      <div class="block-head"><span class="idx">08</span><h2>Event log</h2><span class="aside muted mono" id="logcount"></span></div>
+      <div class="logtools">
+        <input id="logq" placeholder="Filter: tool, text, type…" aria-label="Filter events">
+        <span id="logag"></span>
+      </div>
+      <div class="log" id="log"></div>
+    </div>
+  </section>
+  <footer>Read-only view of runs/&lt;run&gt;/events.jsonl. Observability never makes control decisions.</footer>
+</main>
+
+<div class="tip" id="tip"></div>
+<div class="lightbox" id="lb" role="dialog" aria-modal="true" aria-label="Screenshot">
+  <div class="lb-bar"><span class="t" id="lb-t"></span><span id="lb-m" class="mono muted"></span><button class="seg-btn" id="lb-x">Close · Esc</button></div>
+  <div class="lb-stage"><img id="lb-img" alt=""></div>
+  <div class="lb-frames" id="lb-frames"></div>
+</div>
+
+<script>
+const AGENTS = ["planner", "generator", "evaluator"];
+const CTX_WINDOW = 1_000_000;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const cvar = (a) => `var(--${AGENTS.includes(a) ? a : "orchestrator"})`;
+const money = (n) => n == null ? "—" : n >= 100 ? "$" + n.toFixed(0) : n >= 1 ? "$" + n.toFixed(2) : "$" + n.toFixed(n >= 0.01 ? 3 : 4);
+const kfmt = (n) => n >= 1e9 ? (n / 1e9).toFixed(2) + "B" : n >= 1e6 ? (n / 1e6).toFixed(1) + "M" : n >= 1e3 ? (n / 1e3).toFixed(1) + "k" : String(Math.round(n));
+const dur = (ms) => { if (ms == null) return ""; const s = Math.round(ms / 1000); if (s < 60) return s + "s"; const m = Math.floor(s / 60); if (m < 60) return m + "m " + String(s % 60).padStart(2, "0") + "s"; return Math.floor(m / 60) + "h " + String(m % 60).padStart(2, "0") + "m"; };
+const hhmm = (t) => new Date(t).toTimeString().slice(0, 8);
+
+// Theme toggle (remembered per browser).
+try { const t = localStorage.getItem("panel-theme"); if (t) document.documentElement.dataset.theme = t; } catch {}
+$("theme").onclick = () => {
+  const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+  const cur = document.documentElement.dataset.theme ?? (dark ? "dark" : "light");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem("panel-theme", next); } catch {}
+};
+
+// Rewriting innerHTML restarts CSS animations, so only write when the markup changed.
+const lastHtml = new Map();
+function setHtml(id, html) { if (lastHtml.get(id) === html) return false; lastHtml.set(id, html); $(id).innerHTML = html; return true; }
+
+// ---------------------------------------------------------------- state
+let S, es, currentRun, replaying = true, dirty = true;
+function reset() {
+  S = {
+    status: "connecting", reason: "", startedAt: null, endedAt: null, maxRounds: null, round: 0, models: {},
+    agents: Object.fromEntries(AGENTS.map((a) => [a, { model: "", state: "idle", tool: null, since: null, recent: [], said: "", input: 0, output: 0, cost: 0, ctx: 0, calls: 0 }])),
+    cost: {}, verdicts: {}, builds: {}, roundTs: {}, artifacts: {}, shots: [], events: [],
+    calls: [], open: new Map(), seen: new Set(), orphans: {}, spans: [], toolStats: {},
+  };
+}
+
+function apply(e) {
+  const t = Date.parse(e.ts);
+  const ag = S.agents[e.agent];
+  if (e.cost_usd) { (S.cost[e.round] ??= {})[e.agent] = (S.cost[e.round]?.[e.agent] ?? 0) + e.cost_usd; }
+  if (ag) { ag.input += e.input_tokens ?? 0; ag.output += e.output_tokens ?? 0; ag.cost += e.cost_usd ?? 0; if (e.payload?.context_tokens) ag.ctx = e.payload.context_tokens; }
+  switch (e.type) {
+    case "run_start": S.startedAt = t; S.status = "running"; S.maxRounds = e.payload.max_rounds; S.models = e.payload.models ?? {};
+      for (const a of AGENTS) if (S.models[a]) S.agents[a].model = S.models[a]; break;
+    case "run_end": S.status = e.payload.status ?? "done"; S.reason = e.payload.reason ?? ""; S.endedAt = t; break;
+    case "round_start": S.round = e.round; S.roundTs[e.round] = t; break;
+    case "agent_start": Object.assign(ag, { state: "thinking", tool: null, said: "", model_used: true, model: e.payload.model ?? ag.model });
+      S.spans.push({ agent: e.agent, round: e.round, start: t, end: null }); break;
+    case "agent_end": ag.state = e.payload.status === "ok" ? "done" : "error"; ag.tool = null;
+      { const sp = [...S.spans].reverse().find((s) => s.agent === e.agent && s.end == null); if (sp) sp.end = t; }
+      // Calls the stream never answered (interrupted, parallel) end with their agent.
+      for (const c of S.calls) if (c.agent === e.agent && c.end == null) { c.end = Math.max(c.start, t); c.result ??= "(no result recorded)"; }
+      for (const [id, c] of S.open) if (c.agent === e.agent) S.open.delete(id);
+      break;
+    case "assistant_text": if (ag) { ag.state = "thinking"; if (e.summary !== "(thinking)") ag.said = e.summary; } break;
+    case "tool_use":
+      if (ag) { ag.state = "tool"; ag.tool = { name: e.tool, summary: e.summary }; ag.since = t; ag.calls++;
+        ag.recent.unshift({ tool: e.tool, summary: e.summary }); ag.recent.length = Math.min(ag.recent.length, 3); }
+      { const id = e.payload?.tool_use_id;
+        if (id && S.seen.has(id)) break; // the same call can arrive in two streamed frames
+        if (id) S.seen.add(id);
+        const c = { agent: e.agent, round: e.round, tool: e.tool, summary: e.summary, start: t, end: null, err: false };
+        S.calls.push(c); if (id) S.open.set(id, c); else (S.orphans[e.agent] ??= []).push(c); } break;
+    case "tool_result": {
+      if (ag) { ag.state = "thinking"; ag.tool = null; }
+      // Older runs cut tool_use_id out of large payloads; pair those results with the id-less call.
+      const c = S.open.get(e.payload?.tool_use_id) ?? (e.payload?.tool_use_id ? S.orphans[e.agent]?.shift() : null);
+      if (c) { c.end = t; c.err = e.payload.is_error === true; c.result = e.summary; S.open.delete(e.payload.tool_use_id);
+        const st = ((S.toolStats[c.agent] ??= {})[c.tool] ??= { n: 0, ms: 0, err: 0 }); st.n++; st.ms += c.end - c.start; if (c.err) st.err++; }
+      const imgs = e.payload?.images ?? [];
+      if (imgs.length) {
+        const frames = imgs.filter((p) => p.includes("_frames/"));
+        if (frames.length) S.shots.unshift({ kind: "frames", paths: frames, agent: e.agent, round: e.round, ts: e.ts, label: e.tool });
+        for (const p of imgs.filter((p) => !p.includes("_frames/"))) S.shots.unshift({ kind: "shot", paths: [p], agent: e.agent, round: e.round, ts: e.ts, label: p.split("/").pop().replace(/^r\d+_\w+?_\d+_/, "").replace(/\.png$/, "") });
+      }
+      break; }
+    case "artifact_written": (S.artifacts[e.payload.name] ??= {})[e.round] = e.payload.path; break;
+    case "build_result": if (e.payload.step !== "init") S.builds[e.round] = e.payload.ok; break;
+    case "qa_verdict": if (e.payload.step !== "criteria") S.verdicts[e.round] = e.payload; break;
+  }
+  S.events.push(e);
+}
+
+// ---------------------------------------------------------------- masthead
+function renderMast() {
+  const st = $("status");
+  const bad = ["stalled", "incomplete", "spec_issue", "error", "needs_trim", "aborted"].includes(S.status);
+  st.className = "status " + (S.status === "running" ? "running" : S.status === "done" || S.status === "planned" ? "done" : bad ? "bad" : "");
+  st.lastElementChild.textContent = S.status === "running" && S.round ? `running · round ${S.round}` : S.status;
+  $("reason").textContent = S.reason;
+  const all = Object.values(S.agents);
+  $("f-cost").textContent = money(all.reduce((s, a) => s + a.cost, 0));
+  $("f-tok").innerHTML = `${kfmt(all.reduce((s, a) => s + a.input, 0))}<small>in</small> ${kfmt(all.reduce((s, a) => s + a.output, 0))}<small>out</small>`;
+  $("f-tools").textContent = all.reduce((s, a) => s + a.calls, 0);
+  $("f-time").textContent = S.startedAt ? dur((S.endedAt ?? Date.now()) - S.startedAt) : "—";
+  $("models").textContent = AGENTS.filter((a) => S.models[a]).map((a) => `${a} ${S.models[a].replace("claude-", "")}`).join("  ·  ");
+  const active = AGENTS.find((a) => ["tool", "thinking"].includes(S.agents[a].state));
+  document.title = S.status === "running" ? `● R${S.round || 0} ${active ?? ""} · ${currentRun}` : `${S.status} · ${currentRun ?? "Harness"}`;
+
+  const rounds = Math.max(S.maxRounds ?? 0, S.round, ...Object.keys(S.verdicts).map(Number));
+  let html = `<div class="seg plan${S.artifacts["spec.md"] ? "" : " current"}"><b>Plan</b>${S.artifacts["spec.md"] ? "spec ✓" : "…"}</div>`;
+  for (let r = 1; r <= rounds; r++) {
+    const v = S.verdicts[r], broken = S.builds[r] === false, cur = S.status === "running" && r === S.round;
+    const pct = v?.hard_total ? (v.hard_pass / v.hard_total) * 100 : 0;
+    const ended = S.endedAt != null;
+    const label = v ? `${v.hard_pass}/${v.hard_total} hard` : broken ? "build broken" : cur ? "in progress" : r < S.round ? "no verdict" : ended ? "not needed" : "";
+    html += `<div class="seg${broken ? " broken" : ""}${cur ? " current" : ""}"><span class="fill" style="width:${pct}%"></span><b>R${r}</b>${label}</div>`;
+  }
+  setHtml("track", html);
+}
+
+// ---------------------------------------------------------------- agents
+function renderAgents() {
+  setHtml("agents", AGENTS.map((a) => {
+    const g = S.agents[a];
+    const live = g.state === "tool" || g.state === "thinking";
+    const stateText = g.state === "tool" ? `<span class="tname">${esc(g.tool.name)}</span>` : g.state === "thinking" ? "thinking" : g.state === "done" ? "finished" : g.state === "error" ? "ended with an error" : S.endedAt && !g.model_used ? "not used in this run" : "waiting";
+
+    const pct = Math.min(100, (g.ctx / CTX_WINDOW) * 100);
+    return `<div class="agent${live ? " active" : ""}" style="--c:${cvar(a)}">
+      <div class="agent-name"><h3>${a}</h3><span class="model">${esc(g.model.replace("claude-", ""))}</span></div>
+      <div class="state ${g.state}"><span class="dot"></span>${stateText}<span class="el" data-a="${a}"></span></div>
+      <div class="cmd">${g.tool ? esc(g.tool.summary) : '<span class="muted">—</span>'}</div>
+      <ul class="recent">${g.recent.map((r) => `<li><b>${esc(r.tool)}</b> ${esc(r.summary)}</li>`).join("") || `<li>${S.endedAt && !g.model_used ? "—" : "no tool calls yet"}</li>`}</ul>
+      <p class="said">${g.said ? "“" + esc(g.said) + "”" : ""}</p>
+      <div class="agent-figs">
+        <div><b>${money(g.cost)}</b>cost</div>
+        <div><b>${kfmt(g.input)}/${kfmt(g.output)}</b>tokens</div>
+        <div class="ctx"><b>${pct.toFixed(1)}%</b>context<div class="bar"><i style="width:${pct}%"></i></div></div>
+      </div></div>`;
+  }).join(""));
+  for (const span of $("agents").querySelectorAll(".el")) {
+    const g = S.agents[span.dataset.a];
+    span.textContent = g.state === "tool" && g.since ? dur(Date.now() - g.since) : "";
+  }
+}
+
+// ---------------------------------------------------------------- timeline
+let zoom = "all";
+$("tlzoom").onclick = (ev) => { const b = ev.target.closest("button"); if (!b) return; zoom = b.dataset.z; [...$("tlzoom").children].forEach((x) => x.classList.toggle("on", x === b)); renderTimeline(); };
+function renderTimeline() {
+  if (!S.calls.length) return;
+  const now = S.endedAt ?? Date.now();
+  const t1 = now, t0 = zoom === "all" ? (S.startedAt ?? S.calls[0].start) : Math.max(S.startedAt ?? 0, now - Number(zoom) * 60000);
+  const span = Math.max(1, t1 - t0);
+  const X = (t) => ((Math.max(t0, Math.min(t1, t)) - t0) / span) * 100;
+  const rows = AGENTS.map((a) => {
+    const spans = S.spans.filter((s) => s.agent === a && (s.end ?? now) >= t0).map((s) => `<div class="tl-span" style="left:${X(s.start)}%;width:${Math.max(0.2, X(s.end ?? now) - X(s.start))}%"></div>`).join("");
+    const blocks = S.calls.filter((c) => c.agent === a && (c.end ?? now) >= t0).map((c, i) => {
+      const w = Math.max(0.12, X(c.end ?? now) - X(c.start));
+      return `<div class="tl-blk${c.err ? " err" : ""}" data-i="${S.calls.indexOf(c)}" style="left:${X(c.start)}%;width:${w}%"></div>`;
+    }).join("");
+    return `<div class="tl-row" style="--c:${cvar(a)}"><div class="tl-label"><i></i>${a}</div><div class="tl-track">${spans}${blocks}</div></div>`;
+  }).join("");
+  const marks = Object.entries(S.roundTs).filter(([, t]) => t >= t0).map(([r, t]) => `<div class="tl-mark" style="left:${X(t)}%"><span>R${r}</span></div>`).join("");
+  const nowMark = S.status === "running" ? `<div class="tl-now" style="left:100%"></div>` : "";
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => `<span style="left:${f * 100}%">${zoom === "all" ? "+" + dur(f * span + (t0 - (S.startedAt ?? t0))) : hhmm(t0 + f * span).slice(0, 5)}</span>`).join("");
+  setHtml("timeline", rows + `<div class="tl-marks">${marks}${nowMark}</div><div class="tl-axis">${ticks}</div>`);
+}
+const tip = $("tip");
+document.addEventListener("mousemove", (ev) => {
+  const b = ev.target.closest?.(".tl-blk");
+  if (!b) { tip.classList.remove("on"); return; }
+  const c = S.calls[Number(b.dataset.i)];
+  tip.innerHTML = `<b>${esc(c.agent)} · ${esc(c.tool)}</b> R${c.round} · ${c.end ? dur(c.end - c.start) : "running " + dur(Date.now() - c.start)}<br>${esc(c.summary)}${c.result ? `<br><span style="opacity:.7">→ ${esc(c.result).slice(0, 220)}</span>` : ""}`;
+  const x = Math.min(ev.clientX + 14, innerWidth - 440), y = ev.clientY + 16;
+  tip.style.left = x + "px"; tip.style.top = (y + tip.offsetHeight > innerHeight ? ev.clientY - tip.offsetHeight - 10 : y) + "px";
+  tip.classList.add("on");
+});
+
+// ---------------------------------------------------------------- criteria matrix
+const fileCache = new Map();
+function getFile(path) {
+  const key = currentRun + "|" + path;
+  if (!fileCache.has(key)) fileCache.set(key, fetch(`/api/file?run=${encodeURIComponent(currentRun)}&path=${encodeURIComponent(path)}`).then((r) => (r.ok ? r.text() : "")).catch(() => ""));
+  return fileCache.get(key);
+}
+function jsonBlocks(md) { return [...md.matchAll(/```(?:json)?\s*\n([\s\S]*?)\n```/g)].map((m) => m[1]); }
+function parseCriteria(md) {
+  const i = md.search(/^##\s+Criteria\b/m); if (i < 0) return [];
+  try { return JSON.parse(jsonBlocks(md.slice(i))[0]); } catch { return []; }
+}
+function parseQa(md) {
+  for (const b of jsonBlocks(md)) { try { const v = JSON.parse(b); if (Array.isArray(v)) return v; if (Array.isArray(v.results)) return v.results; } catch {} }
+  return [];
+}
+let critFilter = "all", openCrit = null, critKey = "", critData = null;
+$("critfilter").onclick = (ev) => { const b = ev.target.closest("button"); if (!b) return; critFilter = b.dataset.f; [...$("critfilter").children].forEach((x) => x.classList.toggle("on", x === b)); drawCriteria(); };
+$("criteria").onclick = (ev) => { const tr = ev.target.closest("tr.crit"); if (!tr) return; openCrit = openCrit === tr.dataset.id ? null : tr.dataset.id; drawCriteria(); };
+async function renderCriteria() {
+  const specPath = S.artifacts["spec.md"]?.[0] ?? Object.values(S.artifacts["spec.md"] ?? {})[0];
+  if (!specPath) return;
+  const qa = S.artifacts["qa_report.md"] ?? {};
+  const key = specPath + "|" + Object.entries(qa).map(([r, p]) => r + p).join(",");
+  if (key === critKey) return;
+  critKey = key;
+  const crit = parseCriteria(await getFile(specPath));
+  const rounds = Object.keys(qa).map(Number).sort((a, b) => a - b);
+  const results = {};
+  for (const r of rounds) results[r] = Object.fromEntries(parseQa(await getFile(qa[r])).map((x) => [x.id, x]));
+  critData = { crit, rounds, results };
+  drawCriteria();
+}
+function drawCriteria() {
+  if (!critData || !critData.crit.length) return;
+  const { crit, rounds, results } = critData;
+  const last = rounds.at(-1);
+  const st = (id, r) => results[r]?.[id]?.status ?? "";
+  const changed = (id) => rounds.some((r, i) => i > 0 && st(id, r) && st(id, rounds[i - 1]) && st(id, r) !== st(id, rounds[i - 1]));
+  const keep = (c) => critFilter === "all" || c.class === critFilter || (critFilter === "failing" && last != null && st(c.id, last) !== "PASS" && c.class !== "manual") || (critFilter === "changed" && changed(c.id));
+  const groups = [["hard", "Hard · functionality and craft"], ["soft", "Soft · design and motion"], ["manual", "Manual · needs a human"]];
+  let body = "";
+  for (const [cls, title] of groups) {
+    const rows = crit.filter((c) => c.class === cls && keep(c));
+    if (!rows.length) continue;
+    body += `<tr class="group"><td colspan="${2 + rounds.length}">${title}</td></tr>`;
+    for (const c of rows) {
+      body += `<tr class="crit" data-id="${esc(c.id)}"><td class="cid">${esc(c.id)}</td><td class="ctext" title="${esc(c.text)}">${esc(c.text)}</td>` +
+        rounds.map((r, i) => { const s = st(c.id, r); const flip = i > 0 && s && st(c.id, rounds[i - 1]) && s !== st(c.id, rounds[i - 1]); return `<td><span class="cell ${s}${flip ? " flip" : ""}" title="R${r}: ${s || "not reported"}"></span></td>`; }).join("") + "</tr>";
+      if (openCrit === c.id) {
+        const lr = [...rounds].reverse().find((r) => results[r]?.[c.id]);
+        const res = lr != null ? results[lr][c.id] : null;
+        body += `<tr class="detail"><td colspan="${2 + rounds.length}"><h4>Criterion</h4><p>${esc(c.text)}</p><h4>How QA checks it</h4><p>${esc(c.verify)}</p>` +
+          (res ? `<h4>Evidence · R${lr} · ${esc(res.status)}</h4><p>${esc(res.evidence)}</p>${res.repro ? `<h4>Repro</h4><p>${esc(res.repro)}</p>` : ""}` : "") + "</td></tr>";
+      }
+    }
+  }
+  const foot = rounds.map((r) => { const h = crit.filter((c) => c.class === "hard"); return `<td>${h.filter((c) => st(c.id, r) === "PASS").length}/${h.length}</td>`; }).join("");
+  $("criteria").innerHTML = `<table class="matrix"><thead><tr><th>ID</th><th>${crit.length} criteria</th>${rounds.map((r) => `<th class="r">R${r}</th>`).join("")}</tr></thead>
+    <tbody>${body || `<tr><td colspan="${2 + rounds.length}" class="empty">Nothing matches this filter.</td></tr>`}</tbody>
+    ${rounds.length ? `<tfoot><tr><td></td><td style="text-align:right">hard passing</td>${foot}</tr></tfoot>` : ""}</table>` +
+    (rounds.length ? "" : `<p class="empty">No QA report yet. Columns appear as rounds finish.</p>`);
+}
+
+// ---------------------------------------------------------------- spend + tools
+function renderCost() {
+  const rounds = Object.keys(S.cost).map(Number).sort((a, b) => a - b);
+  if (!rounds.length) return;
+  const tot = (r) => AGENTS.reduce((s, a) => s + (S.cost[r]?.[a] ?? 0), 0);
+  const max = Math.max(...rounds.map(tot), 0.0001);
+  const W = 520, H = 190, padB = 22, padT = 18, bw = Math.min(56, (W - 20) / rounds.length - 14);
+  const step = (W - 20) / rounds.length;
+  let svg = "";
+  rounds.forEach((r, i) => {
+    let y = H - padB; const x = 10 + i * step + (step - bw) / 2;
+    for (const a of AGENTS) {
+      const v = S.cost[r]?.[a] ?? 0; if (!v) continue;
+      const h = (v / max) * (H - padB - padT);
+      y -= h;
+      svg += `<rect x="${x}" y="${y}" width="${bw}" height="${Math.max(h, 1)}" rx="2" fill="${cvar(a)}"><title>R${r} ${a}: ${money(v)}</title></rect>`;
+    }
+    svg += `<text class="tot" x="${x + bw / 2}" y="${y - 5}" text-anchor="middle">${money(tot(r))}</text>`;
+    svg += `<text x="${x + bw / 2}" y="${H - 6}" text-anchor="middle">${r === 0 ? "plan" : "R" + r}</text>`;
+  });
+  const total = rounds.reduce((s, r) => s + tot(r), 0);
+  const lastV = S.verdicts[Math.max(0, ...Object.keys(S.verdicts).map(Number))];
+  const perPass = lastV?.hard_pass ? total / lastV.hard_pass : null;
+  const gen = AGENTS.map((a) => [a, rounds.reduce((s, r) => s + (S.cost[r]?.[a] ?? 0), 0)]);
+  const top = gen.sort((a, b) => b[1] - a[1])[0];
+  $("cost").innerHTML = `<svg class="costchart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMinYMid meet">${svg}</svg>
+    <div class="keyline">${AGENTS.map((a) => `<span style="--c:${cvar(a)}"><i></i>${a} ${money(rounds.reduce((s, r) => s + (S.cost[r]?.[a] ?? 0), 0))}</span>`).join("")}</div>
+    <div class="facts"><div><b>${money(total)}</b>total</div><div><b>${perPass ? money(perPass) : "—"}</b>per passing hard criterion</div><div><b>${top ? Math.round((top[1] / (total || 1)) * 100) + "%" : "—"}</b>${top ? top[0] : ""} share</div></div>`;
+}
+function renderTools() {
+  const agents = AGENTS.filter((a) => S.toolStats[a]);
+  if (!agents.length) return;
+  setHtml("tools", agents.map((a) => {
+    const rows = Object.entries(S.toolStats[a]).sort((x, y) => y[1].n - x[1].n).slice(0, 6);
+    const max = rows[0][1].n;
+    return `<div class="tools-agent" style="--c:${cvar(a)}"><h4><i></i>${a}</h4>` + rows.map(([t, s]) =>
+      `<div class="trow" title="${s.n} calls, ${dur(s.ms)} total${s.err ? `, ${s.err} errors` : ""}"><span class="tn">${esc(t)}</span><span class="tb"><i style="width:${(s.n / max) * 100}%"></i></span><span class="tv">${s.n} · ${dur(s.ms)}</span></div>`).join("") + "</div>";
+  }).join(""));
+}
+
+// ---------------------------------------------------------------- screenshots
+let shotAgent = "all", shotKey = "";
+function fileUrl(p) { return `/api/file?run=${encodeURIComponent(currentRun)}&path=${encodeURIComponent(p)}`; }
+function renderShots() {
+  if (!S.shots.length) return;
+  const agents = [...new Set(S.shots.map((s) => s.agent))];
+  $("shotfilter").innerHTML = ["all", ...agents].map((a) => `<button class="seg-btn${a === shotAgent ? " on" : ""}" data-a="${a}">${a === "all" ? "All" : a}</button>`).join("");
+  const list = S.shots.filter((s) => shotAgent === "all" || s.agent === shotAgent).slice(0, 160);
+  const key = shotAgent + list.length + (list[0]?.ts ?? "");
+  if (key === shotKey) return; shotKey = key;
+  $("strip").innerHTML = list.map((s, i) => `<button class="shot" data-i="${S.shots.indexOf(s)}" style="--c:${cvar(s.agent)}">
+      <div class="img" style="background-image:url('${fileUrl(s.paths[0])}')">${s.kind === "frames" ? `<span class="n">${s.paths.length} frames</span>` : ""}</div>
+      <div class="cap"><i></i>R${s.round} · ${esc(s.agent)} · ${esc(s.label)}</div></button>`).join("");
+}
+$("shotfilter").onclick = (ev) => { const b = ev.target.closest("button"); if (!b) return; shotAgent = b.dataset.a; shotKey = ""; renderShots(); };
+let lb = null;
+$("strip").onclick = (ev) => { const b = ev.target.closest(".shot"); if (!b) return; openLb(Number(b.dataset.i), 0); };
+function openLb(i, f) {
+  lb = { i, f }; const s = S.shots[i];
+  $("lb-img").src = fileUrl(s.paths[f]);
+  $("lb-t").textContent = `R${s.round} · ${s.agent} · ${s.label}`;
+  $("lb-m").textContent = `${hhmm(s.ts)}${s.paths.length > 1 ? ` · frame ${f + 1}/${s.paths.length} · ←/→` : " · ←/→ for other shots"}`;
+  $("lb-frames").innerHTML = s.paths.length > 1 ? s.paths.map((p, k) => `<img src="${fileUrl(p)}" data-f="${k}" class="${k === f ? "on" : ""}" alt="">`).join("") : "";
+  $("lb").classList.add("on");
+}
+$("lb-frames").onclick = (ev) => { const im = ev.target.closest("img"); if (im) openLb(lb.i, Number(im.dataset.f)); };
+$("lb-x").onclick = () => { $("lb").classList.remove("on"); lb = null; };
+document.addEventListener("keydown", (ev) => {
+  if (!lb) return;
+  const s = S.shots[lb.i];
+  if (ev.key === "Escape") { $("lb").classList.remove("on"); lb = null; }
+  else if (ev.key === "ArrowRight") { s.paths.length > 1 && lb.f < s.paths.length - 1 ? openLb(lb.i, lb.f + 1) : lb.i > 0 && openLb(lb.i - 1, 0); }
+  else if (ev.key === "ArrowLeft") { s.paths.length > 1 && lb.f > 0 ? openLb(lb.i, lb.f - 1) : lb.i < S.shots.length - 1 && openLb(lb.i + 1, 0); }
+});
+
+// ---------------------------------------------------------------- handoff files
+let artTab = null, artRound = null, artMode = "full", artKey = "";
+function lineDiff(a, b) {
+  const A = a.split("\n"), B = b.split("\n");
+  if (A.length * B.length > 4e6) return B.map((l) => ["=", l]);
+  const n = A.length, m = B.length, L = Array.from({ length: n + 1 }, () => new Int32Array(m + 1));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i][j] = A[i] === B[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+  const out = []; let i = 0, j = 0;
+  while (i < n && j < m) { if (A[i] === B[j]) { out.push(["=", A[i]]); i++; j++; } else if (L[i + 1][j] >= L[i][j + 1]) out.push(["-", A[i++]]); else out.push(["+", B[j++]]); }
+  while (i < n) out.push(["-", A[i++]]); while (j < m) out.push(["+", B[j++]]);
+  return out;
+}
+$("artmode").onclick = (ev) => { const b = ev.target.closest("button"); if (!b) return; artMode = b.dataset.m; [...$("artmode").children].forEach((x) => x.classList.toggle("on", x === b)); artKey = ""; renderArtifacts(); };
+$("arttabs").onclick = (ev) => { const b = ev.target.closest("button"); if (!b) return; if (b.dataset.tab) { artTab = b.dataset.tab; artRound = null; artMode = artTab === "qa_report.md" ? "full" : "diff"; } else artRound = Number(b.dataset.round); renderArtifacts(); };
+async function renderArtifacts() {
+  const names = ["spec.md", "handoff.md", "qa_report.md"].filter((n) => S.artifacts[n]);
+  if (!names.length) return;
+  artTab = names.includes(artTab) ? artTab : names.includes("qa_report.md") ? "qa_report.md" : names.at(-1);
+  const v = S.artifacts[artTab], rounds = Object.keys(v).map(Number).sort((a, b) => a - b);
+  const round = artRound != null && v[artRound] ? artRound : rounds.at(-1);
+  $("arttabs").innerHTML = names.map((n) => `<button class="seg-btn${n === artTab ? " on" : ""}" data-tab="${n}">${n}</button>`).join("") +
+    `<span class="muted" style="margin:0 4px 0 10px;font-size:12px;align-self:center">round</span>` +
+    rounds.map((r) => `<button class="seg-btn${r === round ? " on" : ""}" data-round="${r}">${r === 0 ? "plan" : "R" + r}</button>`).join("") + `<span class="diffstat" id="diffstat" style="align-self:center;margin-left:auto"></span>`;
+  const key = `${artTab}|${round}|${v[round]}|${artMode}`;
+  if (key === artKey) return; artKey = key;
+  $("artmode").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x.dataset.m === artMode));
+  const prevR = rounds.filter((r) => r < round).at(-1);
+  const [cur, prev] = await Promise.all([getFile(v[round]), prevR != null ? getFile(v[prevR]) : ""]);
+  const rows = artMode === "diff" && prevR != null ? lineDiff(prev, cur) : cur.split("\n").map((l) => ["=", l]);
+  let ln = 0, add = 0, del = 0;
+  $("doc").innerHTML = rows.map(([k, l]) => {
+    if (k !== "-") ln++; if (k === "+") add++; if (k === "-") del++;
+    return `<div class="dl ${k === "+" ? "a" : k === "-" ? "d" : ""}${/^#{1,3} /.test(l) ? " h" : ""}"><span class="ln">${k === "-" ? "" : ln}</span><span class="g">${k === "=" ? "" : k}</span><span class="tx">${esc(l) || " "}</span></div>`;
+  }).join("");
+  $("diffstat").innerHTML = artMode === "diff" && prevR != null ? `vs ${prevR === 0 ? "plan" : "R" + prevR}: <span class="p">+${add}</span> <span class="m">−${del}</span>` : `${ln} lines`;
+}
+
+// ---------------------------------------------------------------- event log
+let logAgent = "all", openEv = null;
+const MILESTONES = new Set(["run_start", "run_end", "round_start", "round_end", "build_result", "qa_verdict", "agent_start", "agent_end", "artifact_written"]);
+$("logq").oninput = () => renderLog(true);
+$("logag").onclick = (ev) => { const b = ev.target.closest("button"); if (!b) return; logAgent = b.dataset.a; renderLog(true); };
+$("log").onclick = (ev) => { if (ev.target.closest(".lpay")) return; const r = ev.target.closest(".lrow"); if (!r) return; const i = Number(r.dataset.i); openEv = openEv === i ? null : i; renderLog(true); };
+function renderLog(force) {
+  const el = $("log");
+  const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 30;
+  setHtml("logag", ["all", ...AGENTS, "orchestrator"].map((a) => `<button class="seg-btn${a === logAgent ? " on" : ""}" data-a="${a}">${a === "all" ? "All" : a === "orchestrator" ? "loop" : a}</button>`).join(" "));
+  const q = $("logq").value.trim().toLowerCase();
+  const idx = [];
+  for (let i = 0; i < S.events.length; i++) {
+    const e = S.events[i];
+    if (logAgent !== "all" && e.agent !== logAgent) continue;
+    if (q && !`${e.type} ${e.tool ?? ""} ${e.summary ?? ""} ${e.agent}`.toLowerCase().includes(q)) continue;
+    if (e.type === "assistant_text" && e.summary === "(thinking)") continue;
+    idx.push(i);
+  }
+  const shown = idx.slice(-600);
+  $("logcount").textContent = `${idx.length} events${idx.length > shown.length ? ` · last ${shown.length}` : ""}`;
+  setHtml("log", shown.map((i) => {
+    const e = S.events[i];
+    const cls = (e.type === "error" || e.payload?.is_error || (e.type === "build_result" && e.payload?.ok === false) ? " err" : "") + (MILESTONES.has(e.type) && e.agent === "orchestrator" ? " mile" : "");
+    let row = `<div class="lrow${cls}" data-i="${i}" style="--c:${cvar(e.agent)}"><span class="muted">${e.ts.slice(11, 19)}</span><span class="ag">${e.agent === "orchestrator" ? "loop" : esc(e.agent)}</span><span class="ty">r${e.round} ${esc(e.type.replace("_", " "))}</span><span class="sm">${e.tool ? `<b>${esc(e.tool)}</b>` : ""}${esc(e.summary ?? "")}${e.duration_ms != null ? ` <span class="muted">· ${dur(e.duration_ms)}</span>` : ""}</span>`;
+    if (openEv === i) {
+      const raw = e.payload?.raw ? `\n\n<a href="${fileUrl(e.payload.raw)}" target="_blank" rel="noopener">open full output (${esc(e.payload.raw)})</a>` : "";
+      const p = { ...e.payload }; delete p.raw;
+      row += `<div class="lpay">${esc(JSON.stringify(p, null, 2))}${e.cost_usd ? `\n\ncost ${money(e.cost_usd)} · in ${e.input_tokens ?? 0} · out ${e.output_tokens ?? 0}` : ""}${raw}</div>`;
+    }
+    return row + "</div>";
+  }).join("") || '<div class="empty">No events match.</div>');
+  if (atBottom && !force) el.scrollTop = el.scrollHeight;
+}
+
+
+// ---------------------------------------------------------------- flow graph
+const NS = "http://www.w3.org/2000/svg";
+const FN = {
+  prompt:    { kind: "file", x: 110, y: 74, label: "prompt.md" },
+  planner:   { kind: "agent", x: 270, y: 128 },
+  spec:      { kind: "file", x: 505, y: 62, label: "spec.md" },
+  generator: { kind: "agent", x: 765, y: 128 },
+  handoff:   { kind: "file", x: 1010, y: 74, label: "handoff.md" },
+  orch:      { kind: "orch", x: 560, y: 262 },
+  app:       { kind: "app", x: 985, y: 328 },
+  evaluator: { kind: "agent", x: 765, y: 400 },
+  qa:        { kind: "file", x: 320, y: 402, label: "qa_report.md" },
+};
+const FILES = { "prompt.md": "prompt", "spec.md": "spec", "handoff.md": "handoff", "qa_report.md": "qa" };
+const FE = [
+  ["prompt", "planner", 0, "data"], ["planner", "spec", -0.14, "data"], ["spec", "generator", -0.14, "data"],
+  ["generator", "handoff", -0.12, "data"], ["generator", "app", 0.16, "data"], ["handoff", "evaluator", 0.1, "data"],
+  ["spec", "evaluator", -0.32, "data"], ["evaluator", "app", -0.14, "data"], ["evaluator", "qa", 0.08, "data"],
+  ["qa", "generator", -0.4, "data"], ["qa", "orch", -0.12, "report"], ["orch", "planner", 0.1, "ctl"],
+  ["orch", "generator", 0.12, "ctl"], ["orch", "evaluator", -0.12, "ctl"], ["orch", "app", 0.1, "ctl"],
+];
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let F, flowEls = null, parts = [], replay = null, rafOn = false;
+function flowReset() {
+  F = {
+    agents: Object.fromEntries(AGENTS.map((a) => [a, { state: "idle", tool: null, since: null, calls: 0 }])),
+    files: {}, app: { build: null, shot: null }, orch: { round: 0, status: "waiting" }, pending: new Map(), ticker: [], clock: null,
+  };
+}
+function el(tag, attrs = {}, parent) { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); parent?.appendChild(e); return e; }
+function curve(a, b, c) {
+  const A = FN[a], B = FN[b], mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2, dx = B.x - A.x, dy = B.y - A.y;
+  return `M${A.x},${A.y} Q${mx - dy * c},${my + dx * c} ${B.x},${B.y}`;
+}
+function buildFlow() {
+  const svg = $("flow"); svg.innerHTML = "";
+  const gE = el("g", {}, svg), gP = el("g", {}, svg), gN = el("g", {}, svg);
+  const edges = FE.map(([a, b, c, kind]) => ({ a, b, kind, path: el("path", { d: curve(a, b, c), class: `f-edge ${kind}` }, gE) }));
+  const nodes = {};
+  for (const [id, n] of Object.entries(FN)) {
+    const g = el("g", { class: `f-node f-${n.kind}`, transform: `translate(${n.x},${n.y})` }, gN);
+    const r = { g };
+    if (n.kind === "agent") {
+      g.style.setProperty("--c", cvar(id));
+      r.halo = el("circle", { r: 40, class: "halo" }, g);
+      el("circle", { r: 40, class: "core shape" }, g);
+      el("circle", { r: 48, class: "ring" }, g);
+      el("text", { class: "ini", y: -8 }, g).textContent = id[0].toUpperCase();
+      r.count = el("text", { class: "count", y: 20 }, g);
+      el("text", { class: "f-label", y: 70 }, g).textContent = id[0].toUpperCase() + id.slice(1);
+      r.sub = el("text", { class: "f-sub", y: 88 }, g);
+    } else if (n.kind === "orch") {
+      el("rect", { x: -92, y: -38, width: 184, height: 76, rx: 14, class: "box shape" }, g);
+      r.beat = el("circle", { cx: -70, cy: -16, r: 4, class: "beat" }, g);
+      el("text", { class: "t1", y: -6 }, g).textContent = "Orchestrator";
+      r.sub = el("text", { class: "t2", y: 16 }, g);
+    } else if (n.kind === "file") {
+      const w = 124, h = 44;
+      el("path", { d: `M${-w / 2},${-h / 2} h${w - 12} l12,12 v${h - 12} h${-w} z`, class: "doc shape" }, g);
+      el("path", { d: `M${w / 2 - 12},${-h / 2} v12 h12 z`, class: "fold" }, g);
+      el("text", { class: "fn", x: -w / 2 + 12, y: -3 }, g).textContent = n.label;
+      r.sub = el("text", { class: "fm", x: -w / 2 + 12, y: 13 }, g);
+    } else if (n.kind === "app") {
+      const w = 190, h = 132;
+      el("rect", { x: -w / 2, y: -h / 2, width: w, height: h, rx: 10, class: "frame shape" }, g);
+      el("rect", { x: -w / 2, y: -h / 2, width: w, height: 18, rx: 10, class: "bar" }, g);
+      ["oklch(66% 0.17 25)", "oklch(80% 0.14 85)", "oklch(70% 0.15 145)"].forEach((c, i) => el("circle", { cx: -w / 2 + 12 + i * 11, cy: -h / 2 + 9, r: 3.2, fill: c, class: "light" }, g));
+      r.ph = el("text", { class: "ph", y: 0 }, g); r.ph.textContent = "no screenshot yet";
+      r.img = el("image", { x: -w / 2 + 6, y: -h / 2 + 22, width: w - 12, height: h - 50, preserveAspectRatio: "xMidYMid slice" }, g);
+      el("text", { class: "f-label", y: h / 2 - 10, style: "font-size:14px" }, g).textContent = "the app";
+      r.badge = el("text", { class: "badge", x: w / 2 - 8, y: -h / 2 + 13, "text-anchor": "end" }, g);
+    }
+    nodes[id] = r;
+  }
+  flowEls = { svg, gP, edges, nodes };
+}
+function edgeFor(a, b) {
+  for (const e of flowEls.edges) { if (e.a === a && e.b === b) return { e, rev: false }; if (e.a === b && e.b === a) return { e, rev: true }; }
+  return null;
+}
+function hit(id) { const g = flowEls?.nodes[id]?.g; if (!g) return; g.classList.remove("hit"); void g.getBBox(); g.classList.add("hit"); setTimeout(() => g.classList.remove("hit"), 750); }
+function send(from, to, color, label, dur = 900) {
+  if (!flowEls) return;
+  const found = edgeFor(from, to); if (!found) { hit(to); return; }
+  const { e, rev } = found;
+  e.path.style.setProperty("--lc", color); e.path.classList.add("lit");
+  clearTimeout(e.t); e.t = setTimeout(() => e.path.classList.remove("lit"), dur + 500);
+  if (reduceMotion) { hit(to); return; }
+  if (parts.length > 28) parts.shift()?.g.remove();
+  const g = el("g", { class: "f-part" }, flowEls.gP); g.style.setProperty("--pc", color);
+  const dots = [5, 3.6, 2.4].map((r, i) => el("circle", { r, opacity: 1 - i * 0.3 }, g));
+  const txt = label ? el("text", { dy: -10 }, g) : null; if (txt) txt.textContent = label;
+  parts.push({ g, dots, txt, path: e.path, len: e.path.getTotalLength(), rev, t0: performance.now(), dur: label ? dur * 1.6 : dur, to });
+  if (!rafOn) { rafOn = true; requestAnimationFrame(frame); }
+}
+function frame(now) {
+  parts = parts.filter((p) => {
+    const k = Math.min(1, (now - p.t0) / p.dur);
+    const ease = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+    p.dots.forEach((d, i) => {
+      const kk = Math.max(0, ease - i * 0.035), at = (p.rev ? 1 - kk : kk) * p.len, pt = p.path.getPointAtLength(at);
+      d.setAttribute("cx", pt.x); d.setAttribute("cy", pt.y);
+      if (i === 0 && p.txt) { p.txt.setAttribute("x", pt.x); p.txt.setAttribute("y", pt.y); }
+    });
+    if (k >= 1) { p.g.remove(); hit(p.to); return false; }
+    return true;
+  });
+  if (parts.length) requestAnimationFrame(frame); else rafOn = false;
+}
+function targetOf(e) {
+  const t = e.tool ?? "", s = e.summary ?? "";
+  const base = s.split(/[\/\s'"]/).filter(Boolean).pop() ?? "";
+  const file = Object.keys(FILES).find((f) => s.endsWith(f) || s.includes(" " + f) || s.includes("/" + f) || s.startsWith(f));
+  if (["Write", "Edit", "MultiEdit"].includes(t)) return file ? { node: FILES[file], out: true } : /\.swift$|Package\.swift|Info\.plist/.test(s) ? { node: "app", out: true } : null;
+  if (t === "Read") return file ? { node: FILES[file], out: false } : /\.swift$/.test(base) ? { node: "app", out: false } : null;
+  if (t === "Bash") {
+    if (/build\.sh|run\.sh|swift build|pkill|open .*\.app/.test(s)) return { node: "app", out: true };
+    if (file) return { node: FILES[file], out: !/^(cat|head|tail|grep|sed -n|less|wc)/.test(s.trim()) && /(>|tee )/.test(s) };
+    return null;
+  }
+  if (/^(ax_|screenshot|record_frames|pasteboard_image)/.test(t)) return { node: "app", out: true, back: /^(screenshot|record_frames|ax_tree|ax_find)/.test(t) };
+  return null;
+}
+function tick(agent, text) {
+  F.ticker.unshift({ agent, text, ts: F.clock ?? Date.now() });
+  F.ticker.length = Math.min(F.ticker.length, 5);
+}
+function flowHandle(e, animate) {
+  const t = Date.parse(e.ts); F.clock = t;
+  const a = e.agent, ag = F.agents[a], col = cvar(a);
+  switch (e.type) {
+    case "run_start": F.orch.status = "running"; break;
+    case "run_end": F.orch.status = e.payload.status ?? "done"; if (animate) hit("orch"); tick("orchestrator", `run ended · ${F.orch.status}`); break;
+    case "round_start": F.orch.round = e.round; if (animate) hit("orch"); tick("orchestrator", `round ${e.round} starts`); break;
+    case "agent_start": ag.state = "active"; ag.tool = null; if (animate) send("orch", a, col, "start"); tick(a, "starts"); break;
+    case "agent_end": ag.state = e.payload.status === "ok" ? "done" : "error"; ag.tool = null; if (animate) send(a, "orch", col, "done"); tick(a, `finished · ${e.payload.status}`); break;
+    case "tool_use": {
+      if (!ag) break;
+      ag.tool = e.tool; ag.since = t; ag.calls++;
+      const tg = targetOf(e);
+      if (tg) { F.pending.set(e.payload?.tool_use_id, { a, tg }); if (animate) tg.out ? send(a, tg.node, col) : send(tg.node, a, col); }
+      tick(a, `${e.tool}${tg ? (tg.out ? " → " : " ← ") + (FN[tg.node].label ?? tg.node) : ""}  ${(e.summary ?? "").split("/").pop().slice(0, 70)}`);
+      break; }
+    case "tool_result": {
+      if (ag) ag.tool = null;
+      const p = F.pending.get(e.payload?.tool_use_id); F.pending.delete(e.payload?.tool_use_id);
+      const imgs = e.payload?.images ?? [];
+      if (imgs.length) F.app.shot = imgs.find((x) => !x.includes("_frames/")) ?? imgs[imgs.length - 1];
+      if (p?.tg.back && animate) send("app", p.a, col, imgs.length ? (imgs.length > 1 ? `${imgs.length} frames` : "image") : null, 700);
+      break; }
+    case "artifact_written": { const id = FILES[e.payload.name]; if (id) { F.files[id] = { round: e.round, bytes: e.payload.bytes, at: t }; if (animate) hit(id); } break; }
+    case "build_result":
+      if (e.payload.step === "init") break;
+      F.app.build = e.payload.ok; if (animate) send("orch", "app", e.payload.ok ? "var(--pass)" : "var(--fail)", e.payload.ok ? "build ok" : "build ✗");
+      tick("orchestrator", e.payload.ok ? `round ${e.round} build ok` : `round ${e.round} build broken`); break;
+    case "qa_verdict":
+      if (e.payload.step === "criteria") break;
+      if (animate) send("qa", "orch", "var(--evaluator)", `${e.payload.hard_pass}/${e.payload.hard_total}`, 1100);
+      tick("evaluator", `verdict ${e.payload.hard_pass}/${e.payload.hard_total} hard`); break;
+  }
+}
+function flowRender() {
+  if (!flowEls) return;
+  const now = F.clock && replay ? F.clock : Date.now();
+  for (const a of AGENTS) {
+    const g = F.agents[a], n = flowEls.nodes[a];
+    n.g.classList.toggle("active", g.state === "active"); n.g.classList.toggle("idle", g.state === "idle"); n.g.classList.toggle("done", g.state === "done" || g.state === "error");
+    n.count.textContent = g.calls ? `${g.calls} calls` : "";
+    n.sub.textContent = g.state === "active" ? (g.tool ? `${g.tool} · ${dur(now - g.since)}` : "thinking") : g.state === "done" ? "finished" : g.state === "error" ? "error" : S.endedAt && !S.agents[a].model_used ? "not used" : "waiting";
+    n.sub.classList.toggle("on", g.state === "active");
+  }
+  const o = flowEls.nodes.orch;
+  o.g.classList.toggle("running", F.orch.status === "running");
+  o.sub.textContent = F.orch.round ? `round ${F.orch.round}${S.maxRounds ? " of " + S.maxRounds : ""} · ${F.orch.status}` : F.orch.status;
+  for (const [id, n] of Object.entries(FN)) {
+    if (n.kind !== "file") continue;
+    const f = F.files[id], node = flowEls.nodes[id];
+    node.g.classList.toggle("empty", !f && id !== "prompt");
+    node.g.classList.toggle("fresh", !!f && now - f.at < 60000);
+    node.sub.textContent = id === "prompt" ? "the brief" : f ? `${f.round === 0 ? "plan" : "R" + f.round} · ${f.bytes ? (f.bytes / 1024).toFixed(1) + " kB" : ""}` : "not written";
+  }
+  const ap = flowEls.nodes.app;
+  ap.g.classList.toggle("ok", F.app.build === true); ap.g.classList.toggle("broken", F.app.build === false);
+  ap.badge.textContent = F.app.build === true ? "build ok" : F.app.build === false ? "build broken" : "";
+  if (F.app.shot && ap.img.getAttribute("href") !== fileUrl(F.app.shot)) { ap.img.setAttribute("href", fileUrl(F.app.shot)); ap.ph.textContent = ""; }
+  setHtml("ticker", F.ticker.map((x, i) => `<li class="${i === 0 ? "new" : ""}" style="--c:${cvar(x.agent)}">${hhmm(x.ts)}  <b>${x.agent === "orchestrator" ? "loop" : x.agent}</b>  ${esc(x.text)}</li>`).join(""));
+  $("replayclock").textContent = replay ? `replay ${hhmm(F.clock ?? Date.now())} · ${replay.speed}×` : "";
+  $("replayclock").classList.toggle("on", !!replay);
+}
+function flowRebuild() { flowReset(); for (const e of S.events) flowHandle(e, false); flowRender(); }
+function stopReplay(rebuild = true) {
+  if (replay) clearTimeout(replay.timer);
+  replay = null;
+  [...$("replay").children].forEach((b) => b.classList.toggle("on", b.dataset.r === "live"));
+  if (rebuild) flowRebuild();
+}
+function startReplay(speed) {
+  stopReplay(false); flowReset(); parts.forEach((p) => p.g.remove()); parts = [];
+  const evs = S.events.slice(); let i = 0;
+  replay = { speed, timer: null };
+  const step = () => {
+    if (!replay) return;
+    if (i >= evs.length) { stopReplay(); return; }
+    const e = evs[i++]; flowHandle(e, true); flowRender();
+    const next = evs[i];
+    const gap = next ? (Date.parse(next.ts) - Date.parse(e.ts)) / speed : 0;
+    replay.timer = setTimeout(step, Math.min(1400, Math.max(gap, next && next.type === "tool_use" ? 40 : 0)));
+  };
+  step();
+}
+$("replay").onclick = (ev) => {
+  const b = ev.target.closest("button"); if (!b) return;
+  if (b.dataset.r === "live") stopReplay(); else startReplay(Number(b.dataset.r));
+  [...$("replay").children].forEach((x) => x.classList.toggle("on", x === b));
+};
+flowReset(); buildFlow();
+setInterval(() => { if (!replaying) flowRender(); }, 500);
+
+// ---------------------------------------------------------------- loop
+function renderAll() { renderMast(); renderAgents(); renderTimeline(); renderCriteria(); renderCost(); renderTools(); renderShots(); renderArtifacts(); renderLog(); }
+setInterval(() => {
+  if (replaying) return;
+  if (dirty) { dirty = false; renderAll(); }
+  else if (S.status === "running") { renderMast(); renderAgents(); renderTimeline(); }
+}, 500);
+
+function connect(run) {
+  es?.close(); reset(); lastHtml.clear(); if (replay) stopReplay(false); flowReset(); buildFlow(); currentRun = run; replaying = true; artKey = ""; critKey = ""; critData = null; shotKey = ""; openEv = null; openCrit = null; fileCache.clear();
+  $("run").value = run;
+  es = new EventSource(`/api/events?run=${encodeURIComponent(run)}`);
+  es.onmessage = (m) => { try { const e = JSON.parse(m.data); apply(e); if (!replay) flowHandle(e, !replaying); dirty = true; } catch {} };
+  es.addEventListener("replayed", () => { replaying = false; dirty = true; renderAll(); flowRender(); requestAnimationFrame(() => { $("log").scrollTop = $("log").scrollHeight; }); });
+  es.onerror = () => { if (S.status === "connecting") { S.status = "offline"; renderMast(); } };
+}
+async function loadRuns() {
+  let runs = [];
+  try { runs = await fetch("/api/runs").then((r) => r.json()); } catch { return; }
+  const sel = $("run");
+  const keep = currentRun;
+  sel.innerHTML = runs.map((r) => `<option>${esc(r)}</option>`).join("");
+  if (keep && runs.includes(keep)) sel.value = keep;
+  if (!currentRun && runs.length) {
+    const wanted = new URLSearchParams(location.search).get("run");
+    connect(runs.includes(wanted) ? wanted : runs[0]);
+  }
+  if (!runs.length) { $("status").lastElementChild.textContent = "no runs yet"; }
+}
+$("run").addEventListener("change", (e) => { history.replaceState(null, "", `?run=${encodeURIComponent(e.target.value)}`); connect(e.target.value); });
+const mast = document.querySelector(".mast");
+addEventListener("scroll", () => mast.classList.toggle("compact", scrollY > 60), { passive: true });
+reset(); loadRuns(); setInterval(loadRuns, 5000);
+</script>
+</body>
+</html>

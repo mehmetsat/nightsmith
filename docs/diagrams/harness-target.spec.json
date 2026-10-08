@@ -1,0 +1,238 @@
+{
+  "title": "Self-improving harness: target design",
+  "direction": "TB",
+  "layers": [
+    {
+      "name": "HUMAN (OPTIONAL)",
+      "nodes": [
+        {
+          "id": "you",
+          "label": "You",
+          "role": "external",
+          "note": "every 3-5 rounds: veto, pick",
+          "x": 1640,
+          "y": 120,
+          "w": 320,
+          "h": 90
+        }
+      ]
+    },
+    {
+      "name": "RESEARCH",
+      "nodes": [
+        {
+          "id": "research",
+          "label": "Product researcher",
+          "role": "new",
+          "note": "web search, lens set by loop",
+          "x": 200,
+          "y": 360,
+          "w": 320,
+          "h": 90
+        },
+        {
+          "id": "ledger",
+          "label": "Research ledger",
+          "role": "new",
+          "note": "questions, ideas + outcome",
+          "x": 680,
+          "y": 360,
+          "w": 320,
+          "h": 90
+        },
+        {
+          "id": "anti",
+          "label": "Anti-collapse checks",
+          "role": "new",
+          "note": "obvious test, fresh eyes, contrarian",
+          "x": 1160,
+          "y": 360,
+          "w": 360,
+          "h": 90
+        }
+      ]
+    },
+    {
+      "name": "PLAN",
+      "nodes": [
+        {
+          "id": "planner",
+          "label": "Planner / replan",
+          "role": "changed",
+          "note": "spec.md, max ~8 new criteria",
+          "x": 740,
+          "y": 600,
+          "w": 320,
+          "h": 90
+        }
+      ]
+    },
+    {
+      "name": "BUILD",
+      "nodes": [
+        {
+          "id": "generator",
+          "label": "Generator",
+          "role": "component",
+          "note": "features; view layer separate",
+          "x": 560,
+          "y": 840,
+          "w": 320,
+          "h": 90
+        },
+        {
+          "id": "design",
+          "label": "Design explorer",
+          "role": "new",
+          "note": "3-4 full directions, branches",
+          "x": 920,
+          "y": 840,
+          "w": 320,
+          "h": 90
+        }
+      ]
+    },
+    {
+      "name": "JUDGE",
+      "nodes": [
+        {
+          "id": "evaluator",
+          "label": "Evaluator",
+          "role": "changed",
+          "note": "hard criteria ratchet, taste skill",
+          "x": 560,
+          "y": 1080,
+          "w": 320,
+          "h": 90
+        },
+        {
+          "id": "useragent",
+          "label": "User agent",
+          "role": "new",
+          "note": "real tasks: success + time",
+          "x": 920,
+          "y": 1080,
+          "w": 320,
+          "h": 90
+        },
+        {
+          "id": "judges",
+          "label": "Design judges",
+          "role": "new",
+          "note": "pairwise, several models",
+          "x": 1280,
+          "y": 1080,
+          "w": 320,
+          "h": 90
+        }
+      ]
+    },
+    {
+      "name": "LOOP",
+      "nodes": [
+        {
+          "id": "orch",
+          "label": "Orchestrator",
+          "role": "changed",
+          "note": "keep or revert each idea; budget is the only stop",
+          "x": 200,
+          "y": 1320,
+          "w": 1040,
+          "h": 90
+        },
+        {
+          "id": "panel",
+          "label": "Events + panel",
+          "role": "component",
+          "note": "events.jsonl, checkpoint page",
+          "x": 1640,
+          "y": 1320,
+          "w": 320,
+          "h": 90
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "anti",
+      "to": "ledger",
+      "label": "tags obvious"
+    },
+    {
+      "from": "research",
+      "to": "ledger",
+      "label": "read / write",
+      "both": true
+    },
+    {
+      "from": "research",
+      "to": "planner",
+      "label": "research.md"
+    },
+    {
+      "from": "planner",
+      "to": "generator",
+      "label": "spec.md"
+    },
+    {
+      "from": "planner",
+      "to": "design",
+      "label": "directions"
+    },
+    {
+      "from": "generator",
+      "to": "evaluator",
+      "label": "build"
+    },
+    {
+      "from": "generator",
+      "to": "useragent",
+      "label": "build"
+    },
+    {
+      "from": "design",
+      "to": "judges",
+      "label": "screenshots"
+    },
+    {
+      "from": "evaluator",
+      "to": "orch",
+      "label": "qa_report"
+    },
+    {
+      "from": "useragent",
+      "to": "orch",
+      "label": "task metrics"
+    },
+    {
+      "from": "judges",
+      "to": "orch",
+      "label": "winner"
+    },
+    {
+      "from": "orch",
+      "to": "panel",
+      "label": "events",
+      "style": "async"
+    },
+    {
+      "from": "orch",
+      "to": "research",
+      "label": "gaps, next lens",
+      "style": "async"
+    },
+    {
+      "from": "panel",
+      "to": "you",
+      "label": "checkpoint",
+      "style": "async"
+    },
+    {
+      "from": "you",
+      "to": "ledger",
+      "label": "veto, picks",
+      "style": "async"
+    }
+  ]
+}
