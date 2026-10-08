@@ -7,7 +7,10 @@ import { join } from "node:path";
 import { EventEmitter } from "node:events";
 import { DatabaseSync } from "node:sqlite";
 
-export type AgentName = "planner" | "generator" | "evaluator" | "orchestrator";
+export type AgentName =
+  | "planner" | "generator" | "evaluator" | "orchestrator"
+  // v2 (evolve.ts)
+  | "researcher" | "outsider" | "cold" | "director" | "designer" | "judge" | "user";
 
 export type EventType =
   | "agent_start"
@@ -22,7 +25,9 @@ export type EventType =
   | "round_end"
   | "run_start"
   | "run_end"
-  | "error";
+  | "error"
+  // v2 (evolve.ts)
+  | "rate_limit" | "paused" | "replan" | "regression" | "revert" | "checkpoint" | "design" | "tasks" | "feedback";
 
 export interface HarnessEvent {
   ts: string;

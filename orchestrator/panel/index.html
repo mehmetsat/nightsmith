@@ -13,6 +13,8 @@
   --ink: oklch(24% 0.02 70); --ink-2: oklch(43% 0.02 70); --ink-3: oklch(60% 0.016 75);
   --rule: oklch(88% 0.012 80); --rule-2: oklch(82% 0.014 80);
   --planner: oklch(68% 0.13 82); --generator: oklch(61% 0.15 45); --evaluator: oklch(50% 0.13 265); --orchestrator: oklch(55% 0.035 150);
+  --researcher: oklch(52% 0.1 175); --outsider: oklch(56% 0.13 340); --cold: oklch(62% 0.02 80);
+  --design: oklch(54% 0.1 115); --director: oklch(54% 0.1 115); --designer: oklch(54% 0.1 115); --judge: oklch(48% 0.05 250); --user: oklch(56% 0.1 220);
   --pass: oklch(57% 0.12 152); --fail: oklch(54% 0.19 20); --manual: oklch(74% 0.03 80); --warn: oklch(70% 0.14 75);
   --live: oklch(63% 0.16 148);
   --serif: "Newsreader", "Iowan Old Style", Georgia, serif;
@@ -27,6 +29,8 @@
     --ink: oklch(93% 0.012 85); --ink-2: oklch(76% 0.014 80); --ink-3: oklch(58% 0.014 75);
     --rule: oklch(30% 0.012 70); --rule-2: oklch(36% 0.014 70);
     --planner: oklch(76% 0.13 82); --generator: oklch(70% 0.14 48); --evaluator: oklch(70% 0.12 268); --orchestrator: oklch(68% 0.035 150);
+    --researcher: oklch(72% 0.1 175); --outsider: oklch(72% 0.12 340); --cold: oklch(60% 0.02 80);
+    --design: oklch(74% 0.1 115); --director: oklch(74% 0.1 115); --designer: oklch(74% 0.1 115); --judge: oklch(70% 0.05 250); --user: oklch(72% 0.1 220);
     --pass: oklch(70% 0.13 152); --fail: oklch(66% 0.17 22); --manual: oklch(52% 0.02 80);
   }
 }
@@ -35,6 +39,8 @@
   --ink: oklch(93% 0.012 85); --ink-2: oklch(76% 0.014 80); --ink-3: oklch(58% 0.014 75);
   --rule: oklch(30% 0.012 70); --rule-2: oklch(36% 0.014 70);
   --planner: oklch(76% 0.13 82); --generator: oklch(70% 0.14 48); --evaluator: oklch(70% 0.12 268); --orchestrator: oklch(68% 0.035 150);
+    --researcher: oklch(72% 0.1 175); --outsider: oklch(72% 0.12 340); --cold: oklch(60% 0.02 80);
+    --design: oklch(74% 0.1 115); --director: oklch(74% 0.1 115); --designer: oklch(74% 0.1 115); --judge: oklch(70% 0.05 250); --user: oklch(72% 0.1 220);
   --pass: oklch(70% 0.13 152); --fail: oklch(66% 0.17 22); --manual: oklch(52% 0.02 80);
 }
 * { box-sizing: border-box; }
@@ -68,6 +74,11 @@ button, select, input { font: inherit; color: inherit; }
 .status.bad { background: color-mix(in oklch, var(--fail) 13%, var(--paper)); color: var(--fail); } .status.bad i { background: var(--fail); }
 @keyframes pulse { 70% { box-shadow: 0 0 0 7px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
 .reason { font: italic 400 15px/1.3 var(--serif); color: var(--ink-2); margin-top: 6px; }
+.pause[hidden] { display: none; }
+.pause { margin-top: 8px; font: 500 13px var(--sans); color: var(--warn); display: flex; gap: 8px; align-items: center; }
+.pause::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--warn); animation: pulse 1.6s infinite; }
+.track .seg .tag { display: block; font: 500 11px var(--mono); margin-top: 2px; }
+.track .seg .tag.up { color: var(--researcher); } .track .seg .tag.bad { color: var(--fail); }
 .figures { display: flex; gap: clamp(18px, 2.4vw, 36px); margin-left: auto; flex-wrap: wrap; }
 .fig dt { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
 .fig dd { margin: 2px 0 0; font: 500 20px/1.1 var(--sans); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
@@ -97,7 +108,7 @@ section.block { padding: clamp(26px, 3.2vw, 44px) 0 0; }
 .empty { color: var(--ink-3); font: italic 15px/1.4 var(--serif); padding: 18px 0; }
 
 /* Agents */
-.agents { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--rule); }
+.agents { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); border-top: 1px solid var(--rule); }
 .agent { padding: 18px 22px 20px; border-right: 1px solid var(--rule); min-width: 0; position: relative; transition: background .4s var(--ease); }
 .agent:first-child { padding-left: 0; } .agent:last-child { border-right: 0; padding-right: 0; }
 .agent.active { background: linear-gradient(to bottom, color-mix(in oklch, var(--c) 7%, transparent), transparent 70%); }
@@ -282,6 +293,10 @@ footer { padding: 40px 0 50px; color: var(--ink-3); font-size: 12px; }
 .f-app .badge { font: 500 10.5px var(--mono); }
 .f-app.ok .badge { fill: var(--pass); } .f-app.broken .badge { fill: var(--fail); } .f-app .badge { fill: var(--ink-3); }
 .f-app .ph { font: italic 13px var(--serif); fill: var(--ink-3); text-anchor: middle; }
+.f-web .webglobe { fill: var(--paper); stroke: var(--rule-2); stroke-width: 1.3; }
+.f-web .webline { fill: none; stroke: var(--rule-2); stroke-width: 1; }
+.f-web.hit .webglobe { stroke: var(--researcher); }
+.f-agent.unused { opacity: .35; }
 .f-part circle { fill: var(--pc); }
 .f-part text { font: 600 11px var(--mono); fill: var(--pc); paint-order: stroke; stroke: var(--paper); stroke-width: 4px; text-anchor: middle; }
 .flow-foot { display: flex; gap: 22px; align-items: flex-start; justify-content: space-between; padding: 10px 0 12px; flex-wrap: wrap; }
@@ -317,12 +332,14 @@ footer { padding: 40px 0 50px; color: var(--ink-3); font-size: 12px; }
         <span class="eyebrow">Harness run</span>
         <h1><select id="run" aria-label="Run"></select><span class="status" id="status"><i></i><span>connecting</span></span></h1>
         <div class="reason" id="reason"></div>
+        <div class="pause" id="pause" hidden></div>
       </div>
       <dl class="figures">
         <div class="fig"><dt>Cost</dt><dd id="f-cost">$0</dd></div>
         <div class="fig"><dt>Tokens</dt><dd id="f-tok">0</dd></div>
         <div class="fig"><dt>Tool calls</dt><dd id="f-tools">0</dd></div>
         <div class="fig"><dt>Elapsed</dt><dd id="f-time">0s</dd></div>
+        <div class="fig" id="f-win-wrap" hidden><dt>5-hour window</dt><dd id="f-win">—</dd></div>
       </dl>
       <button class="theme" id="theme" title="Toggle theme" aria-label="Toggle theme">◐</button>
     </div>
@@ -338,7 +355,7 @@ footer { padding: 40px 0 50px; color: var(--ink-3); font-size: 12px; }
         <button class="seg-btn on" data-r="live">Live</button><button class="seg-btn" data-r="20">Replay 20×</button><button class="seg-btn" data-r="60">60×</button><button class="seg-btn" data-r="200">200×</button>
       </div>
     </div>
-    <div class="flow-wrap"><svg id="flow" viewBox="0 0 1120 500" role="img" aria-label="Agents, files and the app, with live activity"></svg></div>
+    <div class="flow-wrap"><svg id="flow" viewBox="0 0 1120 590" role="img" aria-label="Agents, files and the app, with live activity"></svg></div>
     <div class="flow-foot">
       <ul class="ticker" id="ticker"></ul>
       <div class="flow-key">
@@ -415,11 +432,15 @@ footer { padding: 40px 0 50px; color: var(--ink-3); font-size: 12px; }
 </div>
 
 <script>
-const AGENTS = ["planner", "generator", "evaluator"];
+const AGENTS = ["planner", "generator", "evaluator", "researcher", "outsider", "cold", "director", "designer", "judge", "user"];
+// Flow graph: several agents share one node.
+const NODE_OF = { director: "design", designer: "design", judge: "design" };
+const BASE_AGENTS = ["planner", "generator", "evaluator"];
+const shownAgents = () => AGENTS.filter((a) => BASE_AGENTS.includes(a) || S.agents[a].model_used);
 const CTX_WINDOW = 1_000_000;
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const cvar = (a) => `var(--${AGENTS.includes(a) ? a : "orchestrator"})`;
+const cvar = (a) => `var(--${AGENTS.includes(a) || a === "design" ? a : "orchestrator"})`;
 const money = (n) => n == null ? "—" : n >= 100 ? "$" + n.toFixed(0) : n >= 1 ? "$" + n.toFixed(2) : "$" + n.toFixed(n >= 0.01 ? 3 : 4);
 const kfmt = (n) => n >= 1e9 ? (n / 1e9).toFixed(2) + "B" : n >= 1e6 ? (n / 1e6).toFixed(1) + "M" : n >= 1e3 ? (n / 1e3).toFixed(1) + "k" : String(Math.round(n));
 const dur = (ms) => { if (ms == null) return ""; const s = Math.round(ms / 1000); if (s < 60) return s + "s"; const m = Math.floor(s / 60); if (m < 60) return m + "m " + String(s % 60).padStart(2, "0") + "s"; return Math.floor(m / 60) + "h " + String(m % 60).padStart(2, "0") + "m"; };
@@ -439,6 +460,14 @@ $("theme").onclick = () => {
 const lastHtml = new Map();
 function setHtml(id, html) { if (lastHtml.get(id) === html) return false; lastHtml.set(id, html); $(id).innerHTML = html; return true; }
 
+// How many criteria a replan event added (older runs: read it from the summary text).
+function replanCount(e) {
+  if (typeof e.payload?.added_count === "number") return e.payload.added_count;
+  if (Array.isArray(e.payload?.added)) return e.payload.added.length;
+  const m = (e.summary ?? "").match(/^\+(\d+) criteria/);
+  return m ? Number(m[1]) : null;
+}
+
 // ---------------------------------------------------------------- state
 let S, es, currentRun, replaying = true, dirty = true;
 function reset() {
@@ -446,6 +475,7 @@ function reset() {
     status: "connecting", reason: "", startedAt: null, endedAt: null, maxRounds: null, round: 0, models: {},
     agents: Object.fromEntries(AGENTS.map((a) => [a, { model: "", state: "idle", tool: null, since: null, recent: [], said: "", input: 0, output: 0, cost: 0, ctx: 0, calls: 0 }])),
     cost: {}, verdicts: {}, builds: {}, roundTs: {}, artifacts: {}, shots: [], events: [],
+    window: null, paused: null, replans: {}, ratchetNotes: {}, mode: "classic",
     calls: [], open: new Map(), seen: new Set(), orphans: {}, spans: [], toolStats: {},
   };
 }
@@ -456,9 +486,14 @@ function apply(e) {
   if (e.cost_usd) { (S.cost[e.round] ??= {})[e.agent] = (S.cost[e.round]?.[e.agent] ?? 0) + e.cost_usd; }
   if (ag) { ag.input += e.input_tokens ?? 0; ag.output += e.output_tokens ?? 0; ag.cost += e.cost_usd ?? 0; if (e.payload?.context_tokens) ag.ctx = e.payload.context_tokens; }
   switch (e.type) {
-    case "run_start": S.startedAt = t; S.status = "running"; S.maxRounds = e.payload.max_rounds; S.models = e.payload.models ?? {};
+    case "run_start": S.startedAt = t; S.status = "running"; S.maxRounds = e.payload.max_rounds; S.models = e.payload.models ?? {}; S.mode = e.payload.mode ?? "classic";
       for (const a of AGENTS) if (S.models[a]) S.agents[a].model = S.models[a]; break;
-    case "run_end": S.status = e.payload.status ?? "done"; S.reason = e.payload.reason ?? ""; S.endedAt = t; break;
+    case "run_end": S.status = e.payload.status ?? "done"; S.reason = e.payload.reason ?? ""; S.endedAt = t; S.paused = null; break;
+    case "rate_limit": S.window = e.payload; break;
+    case "paused": S.paused = e.payload.resumed ? null : { until: e.payload.wait_min ? t + e.payload.wait_min * 60000 : null, text: e.summary }; break;
+    case "replan": { const n = replanCount(e); if (n != null) S.replans[e.round] = n; break; }
+    case "regression": S.ratchetNotes[e.round] = "regressed " + (e.payload.regressed ?? []).join(", "); break;
+    case "revert": S.ratchetNotes[e.round] = "reverted"; break;
     case "round_start": S.round = e.round; S.roundTs[e.round] = t; break;
     case "agent_start": Object.assign(ag, { state: "thinking", tool: null, said: "", model_used: true, model: e.payload.model ?? ag.model });
       S.spans.push({ agent: e.agent, round: e.round, start: t, end: null }); break;
@@ -503,7 +538,11 @@ function renderMast() {
   const bad = ["stalled", "incomplete", "spec_issue", "error", "needs_trim", "aborted"].includes(S.status);
   st.className = "status " + (S.status === "running" ? "running" : S.status === "done" || S.status === "planned" ? "done" : bad ? "bad" : "");
   st.lastElementChild.textContent = S.status === "running" && S.round ? `running · round ${S.round}` : S.status;
-  $("reason").textContent = S.reason;
+  $("reason").textContent = S.reason || (S.mode === "evolve" && S.status === "running" ? "self-improving: the spec is a floor, not a ceiling" : "");
+  $("f-win-wrap").hidden = !S.window;
+  if (S.window) $("f-win").textContent = `${Math.round((S.window.fiveHour ?? 0) * 100)}%`;
+  $("pause").hidden = !S.paused;
+  if (S.paused) $("pause").textContent = S.paused.until ? `Waiting for the 5-hour window to reset · about ${Math.max(0, Math.round((S.paused.until - Date.now()) / 60000))} min left` : (S.paused.text ?? "paused");
   const all = Object.values(S.agents);
   $("f-cost").textContent = money(all.reduce((s, a) => s + a.cost, 0));
   $("f-tok").innerHTML = `${kfmt(all.reduce((s, a) => s + a.input, 0))}<small>in</small> ${kfmt(all.reduce((s, a) => s + a.output, 0))}<small>out</small>`;
@@ -520,14 +559,16 @@ function renderMast() {
     const pct = v?.hard_total ? (v.hard_pass / v.hard_total) * 100 : 0;
     const ended = S.endedAt != null;
     const label = v ? `${v.hard_pass}/${v.hard_total} hard` : broken ? "build broken" : cur ? "in progress" : r < S.round ? "no verdict" : ended ? "not needed" : "";
-    html += `<div class="seg${broken ? " broken" : ""}${cur ? " current" : ""}"><span class="fill" style="width:${pct}%"></span><b>R${r}</b>${label}</div>`;
+    const up = S.replans[r] != null ? `<span class="tag up">↑ +${S.replans[r]} criteria</span>` : "";
+    const bad = S.ratchetNotes[r] ? `<span class="tag bad">${esc(S.ratchetNotes[r])}</span>` : "";
+    html += `<div class="seg${broken ? " broken" : ""}${cur ? " current" : ""}"><span class="fill" style="width:${pct}%"></span><b>R${r}</b>${label}${up}${bad}</div>`;
   }
   setHtml("track", html);
 }
 
 // ---------------------------------------------------------------- agents
 function renderAgents() {
-  setHtml("agents", AGENTS.map((a) => {
+  setHtml("agents", shownAgents().map((a) => {
     const g = S.agents[a];
     const live = g.state === "tool" || g.state === "thinking";
     const stateText = g.state === "tool" ? `<span class="tname">${esc(g.tool.name)}</span>` : g.state === "thinking" ? "thinking" : g.state === "done" ? "finished" : g.state === "error" ? "ended with an error" : S.endedAt && !g.model_used ? "not used in this run" : "waiting";
@@ -560,7 +601,7 @@ function renderTimeline() {
   const t1 = now, t0 = zoom === "all" ? (S.startedAt ?? S.calls[0].start) : Math.max(S.startedAt ?? 0, now - Number(zoom) * 60000);
   const span = Math.max(1, t1 - t0);
   const X = (t) => ((Math.max(t0, Math.min(t1, t)) - t0) / span) * 100;
-  const rows = AGENTS.map((a) => {
+  const rows = shownAgents().map((a) => {
     const spans = S.spans.filter((s) => s.agent === a && (s.end ?? now) >= t0).map((s) => `<div class="tl-span" style="left:${X(s.start)}%;width:${Math.max(0.2, X(s.end ?? now) - X(s.start))}%"></div>`).join("");
     const blocks = S.calls.filter((c) => c.agent === a && (c.end ?? now) >= t0).map((c, i) => {
       const w = Math.max(0.12, X(c.end ?? now) - X(c.start));
@@ -738,7 +779,8 @@ function lineDiff(a, b) {
 $("artmode").onclick = (ev) => { const b = ev.target.closest("button"); if (!b) return; artMode = b.dataset.m; [...$("artmode").children].forEach((x) => x.classList.toggle("on", x === b)); artKey = ""; renderArtifacts(); };
 $("arttabs").onclick = (ev) => { const b = ev.target.closest("button"); if (!b) return; if (b.dataset.tab) { artTab = b.dataset.tab; artRound = null; artMode = artTab === "qa_report.md" ? "full" : "diff"; } else artRound = Number(b.dataset.round); renderArtifacts(); };
 async function renderArtifacts() {
-  const names = ["spec.md", "handoff.md", "qa_report.md"].filter((n) => S.artifacts[n]);
+  const order = ["spec.md", "handoff.md", "qa_report.md"];
+  const names = [...order.filter((n) => S.artifacts[n]), ...Object.keys(S.artifacts).filter((n) => !order.includes(n)).sort()];
   if (!names.length) return;
   artTab = names.includes(artTab) ? artTab : names.includes("qa_report.md") ? "qa_report.md" : names.at(-1);
   const v = S.artifacts[artTab], rounds = Object.keys(v).map(Number).sort((a, b) => a - b);
@@ -807,21 +849,30 @@ const FN = {
   orch:      { kind: "orch", x: 560, y: 262 },
   app:       { kind: "app", x: 985, y: 328 },
   evaluator: { kind: "agent", x: 765, y: 400 },
-  qa:        { kind: "file", x: 320, y: 402, label: "qa_report.md" },
+  qa:        { kind: "file", x: 360, y: 412, label: "qa_report.md" },
+  web:       { kind: "web", x: 56, y: 262 },
+  researcher:{ kind: "agent", x: 190, y: 262 },
+  ledger:    { kind: "file", x: 150, y: 398, label: "ledger.md" },
+  outsider:  { kind: "agent", x: 392, y: 236 },
+  design:    { kind: "agent", x: 575, y: 462 },
+  user:      { kind: "agent", x: 1000, y: 482 },
 };
-const FILES = { "prompt.md": "prompt", "spec.md": "spec", "handoff.md": "handoff", "qa_report.md": "qa" };
+const FILES = { "prompt.md": "prompt", "spec.md": "spec", "handoff.md": "handoff", "qa_report.md": "qa", "ledger.md": "ledger" };
 const FE = [
   ["prompt", "planner", 0, "data"], ["planner", "spec", -0.14, "data"], ["spec", "generator", -0.14, "data"],
   ["generator", "handoff", -0.12, "data"], ["generator", "app", 0.16, "data"], ["handoff", "evaluator", 0.1, "data"],
   ["spec", "evaluator", -0.32, "data"], ["evaluator", "app", -0.14, "data"], ["evaluator", "qa", 0.08, "data"],
   ["qa", "generator", -0.4, "data"], ["qa", "orch", -0.12, "report"], ["orch", "planner", 0.1, "ctl"],
   ["orch", "generator", 0.12, "ctl"], ["orch", "evaluator", -0.12, "ctl"], ["orch", "app", 0.1, "ctl"],
+  ["web", "researcher", 0, "data"], ["researcher", "ledger", 0.1, "data"], ["researcher", "planner", 0.12, "report"],
+  ["outsider", "planner", -0.1, "report"], ["orch", "researcher", -0.18, "ctl"], ["orch", "outsider", 0.1, "ctl"],
+  ["orch", "design", 0.04, "ctl"], ["design", "app", -0.2, "data"], ["orch", "user", -0.22, "ctl"], ["user", "app", 0, "data"],
 ];
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 let F, flowEls = null, parts = [], replay = null, rafOn = false;
 function flowReset() {
   F = {
-    agents: Object.fromEntries(AGENTS.map((a) => [a, { state: "idle", tool: null, since: null, calls: 0 }])),
+    agents: Object.fromEntries([...AGENTS, "design"].map((a) => [a, { state: "idle", tool: null, since: null, calls: 0, used: false }])),
     files: {}, app: { build: null, shot: null }, orch: { round: 0, status: "waiting" }, pending: new Map(), ticker: [], clock: null,
   };
 }
@@ -846,6 +897,8 @@ function buildFlow() {
       el("text", { class: "ini", y: -8 }, g).textContent = id[0].toUpperCase();
       r.count = el("text", { class: "count", y: 20 }, g);
       el("text", { class: "f-label", y: 70 }, g).textContent = id[0].toUpperCase() + id.slice(1);
+      if (id === "outsider") g.querySelector(".ini").textContent = "O";
+      if (id === "design") g.querySelector(".f-label").textContent = "Design studio";
       r.sub = el("text", { class: "f-sub", y: 88 }, g);
     } else if (n.kind === "orch") {
       el("rect", { x: -92, y: -38, width: 184, height: 76, rx: 14, class: "box shape" }, g);
@@ -858,6 +911,11 @@ function buildFlow() {
       el("path", { d: `M${w / 2 - 12},${-h / 2} v12 h12 z`, class: "fold" }, g);
       el("text", { class: "fn", x: -w / 2 + 12, y: -3 }, g).textContent = n.label;
       r.sub = el("text", { class: "fm", x: -w / 2 + 12, y: 13 }, g);
+    } else if (n.kind === "web") {
+      el("circle", { r: 26, class: "webglobe shape" }, g);
+      el("ellipse", { rx: 11, ry: 26, class: "webline" }, g);
+      el("line", { x1: -26, y1: 0, x2: 26, y2: 0, class: "webline" }, g);
+      el("text", { class: "f-sub", y: 46 }, g).textContent = "the web";
     } else if (n.kind === "app") {
       const w = 190, h = 132;
       el("rect", { x: -w / 2, y: -h / 2, width: w, height: h, rx: 10, class: "frame shape" }, g);
@@ -916,6 +974,10 @@ function targetOf(e) {
     if (file) return { node: FILES[file], out: !/^(cat|head|tail|grep|sed -n|less|wc)/.test(s.trim()) && /(>|tee )/.test(s) };
     return null;
   }
+  if (t === "WebSearch" || t === "WebFetch") return { node: "web", out: true, back: true };
+  if (["Write", "Edit"].includes(t) && /research\/ledger\.md/.test(s)) return { node: "ledger", out: true };
+  if (["Write", "Edit"].includes(t) && /research\/(r\d+|outsider_r\d+)\.md/.test(s)) return { node: "planner", out: true };
+  if (t === "Read" && /research\/ledger\.md/.test(s)) return { node: "ledger", out: false };
   if (/^(ax_|screenshot|record_frames|pasteboard_image)/.test(t)) return { node: "app", out: true, back: /^(screenshot|record_frames|ax_tree|ax_find)/.test(t) };
   return null;
 }
@@ -925,13 +987,18 @@ function tick(agent, text) {
 }
 function flowHandle(e, animate) {
   const t = Date.parse(e.ts); F.clock = t;
-  const a = e.agent, ag = F.agents[a], col = cvar(a);
+  const a = NODE_OF[e.agent] ?? e.agent, ag = F.agents[a], col = cvar(e.agent);
   switch (e.type) {
     case "run_start": F.orch.status = "running"; break;
     case "run_end": F.orch.status = e.payload.status ?? "done"; if (animate) hit("orch"); tick("orchestrator", `run ended · ${F.orch.status}`); break;
     case "round_start": F.orch.round = e.round; if (animate) hit("orch"); tick("orchestrator", `round ${e.round} starts`); break;
-    case "agent_start": ag.state = "active"; ag.tool = null; if (animate) send("orch", a, col, "start"); tick(a, "starts"); break;
-    case "agent_end": ag.state = e.payload.status === "ok" ? "done" : "error"; ag.tool = null; if (animate) send(a, "orch", col, "done"); tick(a, `finished · ${e.payload.status}`); break;
+    case "agent_start": if (!ag) break; ag.state = "active"; ag.tool = null; ag.used = true; if (animate) send("orch", a, col, "start"); tick(a, "starts"); break;
+    case "replan": { const n = replanCount(e); if (n != null) { if (animate) hit("spec"); tick("planner", `raised the bar: +${n} criteria`); } else tick("orchestrator", e.summary ?? "replan"); break; }
+    case "regression": tick("orchestrator", `ratchet broken: ${(e.payload.regressed ?? []).join(", ")}`); if (animate) hit("orch"); break;
+    case "revert": tick("orchestrator", e.summary ?? "reverted"); if (animate) send("orch", "app", "var(--fail)", "revert"); break;
+    case "paused": tick("orchestrator", e.summary ?? "paused"); break;
+    case "checkpoint": tick("orchestrator", "checkpoint page written"); break;
+    case "agent_end": if (!ag) break; ag.state = e.payload.status === "ok" ? "done" : "error"; ag.tool = null; if (animate) send(a, "orch", col, "done"); tick(a, `finished · ${e.payload.status}`); break;
     case "tool_use": {
       if (!ag) break;
       ag.tool = e.tool; ag.since = t; ag.calls++;
@@ -944,7 +1011,7 @@ function flowHandle(e, animate) {
       const p = F.pending.get(e.payload?.tool_use_id); F.pending.delete(e.payload?.tool_use_id);
       const imgs = e.payload?.images ?? [];
       if (imgs.length) F.app.shot = imgs.find((x) => !x.includes("_frames/")) ?? imgs[imgs.length - 1];
-      if (p?.tg.back && animate) send("app", p.a, col, imgs.length ? (imgs.length > 1 ? `${imgs.length} frames` : "image") : null, 700);
+      if (p?.tg.back && animate) send(p.tg.node, p.a, col, p.tg.node === "web" ? "page" : imgs.length ? (imgs.length > 1 ? `${imgs.length} frames` : "image") : null, 700);
       break; }
     case "artifact_written": { const id = FILES[e.payload.name]; if (id) { F.files[id] = { round: e.round, bytes: e.payload.bytes, at: t }; if (animate) hit(id); } break; }
     case "build_result":
@@ -960,11 +1027,13 @@ function flowHandle(e, animate) {
 function flowRender() {
   if (!flowEls) return;
   const now = F.clock && replay ? F.clock : Date.now();
-  for (const a of AGENTS) {
-    const g = F.agents[a], n = flowEls.nodes[a];
+  for (const a of Object.keys(F.agents)) {
+    const g = F.agents[a], n = flowEls?.nodes[a];
+    if (!n) continue;
+    n.g.classList.toggle("unused", !g.used && !BASE_AGENTS.includes(a));
     n.g.classList.toggle("active", g.state === "active"); n.g.classList.toggle("idle", g.state === "idle"); n.g.classList.toggle("done", g.state === "done" || g.state === "error");
     n.count.textContent = g.calls ? `${g.calls} calls` : "";
-    n.sub.textContent = g.state === "active" ? (g.tool ? `${g.tool} · ${dur(now - g.since)}` : "thinking") : g.state === "done" ? "finished" : g.state === "error" ? "error" : S.endedAt && !S.agents[a].model_used ? "not used" : "waiting";
+    n.sub.textContent = g.state === "active" ? (g.tool ? `${g.tool} · ${dur(now - g.since)}` : "thinking") : g.state === "done" ? "finished" : g.state === "error" ? "error" : S.endedAt && !g.used ? "not used" : "waiting";
     n.sub.classList.toggle("on", g.state === "active");
   }
   const o = flowEls.nodes.orch;

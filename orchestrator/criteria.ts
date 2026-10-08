@@ -7,6 +7,10 @@ export interface Criterion {
   class: CriterionClass;
   text: string;
   verify: string;
+  // v2: where a criterion added by a replan came from
+  origin?: string;
+  novelty?: "new" | "obvious";
+  added_in?: number;
 }
 
 export interface QaResult {
@@ -90,4 +94,46 @@ export function scoreRound(criteria: Criterion[], v: QaVerdict): RoundScore {
     spec_issue: v.spec_issue,
     spec_issue_reason: v.spec_issue_reason,
   };
+}
+
+// ---------------------------------------------------------------------------
+// v2: the spec may grow, never shrink. The loop enforces that, not the replanner.
+
+export interface SpecGuard {
+  criteria: Criterion[];
+  added: Criterion[];
+  restored: string[];
+  dropped: string[];
+}
+
+/**
+ * Compares the replanned criteria with the previous ones. Existing criteria come back exactly
+ * as they were (a replanner cannot weaken the floor); at most `max` new ones are kept.
+ */
+export function guardSpec(previous: Criterion[], next: Criterion[], max: number, round: number, vetoedOrigins: Set<string>): SpecGuard {
+  const prevById = new Map(previous.map((c) => [c.id, c]));
+  const restored: string[] = [];
+  const dropped: string[] = [];
+  const added: Criterion[] = [];
+  for (const c of next) {
+    if (prevById.has(c.id)) {
+      const p = prevById.get(c.id)!;
+      if (p.text !== c.text || p.verify !== c.verify || p.class !== c.class) restored.push(c.id);
+      continue;
+    }
+    const valid = c.id && ["hard", "soft", "manual"].includes(c.class) && c.text && c.verify;
+    if (!valid || (c.origin && vetoedOrigins.has(c.origin)) || added.length >= max) { dropped.push(c.id ?? "?"); continue; }
+    added.push({ ...c, added_in: round, novelty: c.novelty === "obvious" ? "obvious" : "new" });
+  }
+  for (const p of previous) if (!next.some((c) => c.id === p.id)) restored.push(p.id);
+  return { criteria: [...previous, ...added], added, restored, dropped };
+}
+
+/** Replaces the Criteria JSON block in spec.md, keeping the prose above it. */
+export function writeCriteria(specMd: string, criteria: Criterion[]): string {
+  const idx = specMd.search(/^##\s+Criteria\b/m);
+  const head = idx < 0 ? specMd.trimEnd() + "\n\n" : specMd.slice(0, idx);
+  const section = idx < 0 ? "" : specMd.slice(idx);
+  const intro = section.split("```")[0].replace(/^##\s+Criteria\b.*\n/m, "").trim();
+  return `${head}## Criteria\n\n${intro ? intro + "\n\n" : ""}\`\`\`json\n${JSON.stringify(criteria, null, 2)}\n\`\`\`\n`;
 }

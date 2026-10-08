@@ -9,6 +9,7 @@
 //   axcli type    <id> <text> [--app X] [--global]
 //   axcli key     <combo> [--app X] [--global]          e.g. cmd+shift+3, return, down
 //   axcli pbimage <file.png>                  put an image on the general pasteboard
+//   axcli pbinfo                              what is on the pasteboard (types, image size, hash)
 //   axcli fixture <out.png> <label> [--size WxH] [--color 0.2,0.5,0.8]   make a test image
 //
 // Element ids:
@@ -336,7 +337,10 @@ case "check":
     if flags.contains("prompt") {
         _ = AXIsProcessTrustedWithOptions([kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary)
     }
-    emit(["accessibility": AXIsProcessTrusted(), "screen_recording": CGPreflightScreenCaptureAccess()])
+    // A locked screen blocks screenshots and accessibility for every app; callers must wait.
+    let session = CGSessionCopyCurrentDictionary() as? [String: Any] ?? [:]
+    let locked = (session["CGSSessionScreenIsLocked"] as? Bool) ?? ((session["CGSSessionScreenIsLocked"] as? Int) == 1)
+    emit(["accessibility": AXIsProcessTrusted(), "screen_recording": CGPreflightScreenCaptureAccess(), "screen_locked": locked])
 
 case "windows":
     let pid = options["app"] != nil || ProcessInfo.processInfo.environment["AXCLI_APP"] != nil
@@ -455,6 +459,22 @@ case "pbimage":
     pb.clearContents()
     guard pb.writeObjects([image]) else { fail("could not write image to pasteboard") }
     emit(["ok": true, "change_count": pb.changeCount, "size": [Int(image.size.width), Int(image.size.height)]])
+
+case "pbinfo":
+    // What is on the pasteboard now: types, image size and a hash of the image data.
+    let pb = NSPasteboard.general
+    var out: [String: Any] = ["change_count": pb.changeCount, "types": (pb.types ?? []).map { $0.rawValue }]
+    if let image = NSImage(pasteboard: pb), let tiff = image.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff) {
+        out["image"] = ["width": rep.pixelsWide, "height": rep.pixelsHigh]
+        // Hash of the decoded pixels' PNG, so the same picture gives the same value whatever the source format.
+        if let png = rep.representation(using: .png, properties: [:]) {
+            var h: UInt64 = 1469598103934665603
+            for b in png { h = (h ^ UInt64(b)) &* 1099511628211 }
+            out["image_hash"] = String(h, radix: 16)
+        }
+    }
+    if let text = pb.string(forType: .string) { out["text"] = String(text.prefix(200)) }
+    emit(out)
 
 case "fixture":
     guard positional.count >= 3 else { fail("usage: axcli fixture <out.png> <label> [--size WxH] [--color r,g,b]") }

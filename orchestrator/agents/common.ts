@@ -31,6 +31,27 @@ export interface AgentOutcome {
   sdkCostUsd: number | null;
   turns: number | null;
   finalText: string;
+  /** Set by Harness.agent when the screen was locked during the session (GUI results are void). */
+  screenLocked?: boolean;
+}
+
+// The subscription's usage windows, as last reported by any agent session (rate_limit_event).
+interface UsageWindow { fiveHour: number | null; sevenDay: number | null; resetsAt: number | null; status: string | null }
+const windowState: UsageWindow = { fiveHour: null, sevenDay: null, resetsAt: null, status: null };
+export function usageWindow(): UsageWindow { return { ...windowState }; }
+
+function trackWindow(log: EventLog, a: AgentRun, msg: Record<string, unknown>) {
+  const info = msg.rate_limit_info as { status?: string; resetsAt?: number; unifiedWindows?: Record<string, { utilization?: number; resetsAt?: number }> } | undefined;
+  if (!info) return;
+  const five = info.unifiedWindows?.five_hour;
+  const prev = windowState.fiveHour;
+  windowState.status = info.status ?? null;
+  windowState.fiveHour = five?.utilization ?? windowState.fiveHour;
+  windowState.sevenDay = info.unifiedWindows?.seven_day?.utilization ?? windowState.sevenDay;
+  windowState.resetsAt = five?.resetsAt ?? info.resetsAt ?? windowState.resetsAt;
+  if (prev == null || Math.abs((windowState.fiveHour ?? 0) - prev) >= 0.02 || info.status !== "allowed") {
+    log.emitEvent({ agent: a.agent, round: a.round, type: "rate_limit", summary: `5-hour window ${Math.round((windowState.fiveHour ?? 0) * 100)}%`, payload: { ...windowState } });
+  }
 }
 
 function writeGuard(writable: string[], cwd: string): CanUseTool {
@@ -90,6 +111,7 @@ export async function runAgent(log: EventLog, a: AgentRun): Promise<AgentOutcome
     for await (const msg of stream) {
       appendFileSync(sdkLog, JSON.stringify(msg) + "\n");
       n.handle(msg as { type: string });
+      if (msg.type === "rate_limit_event") trackWindow(log, a, msg as unknown as Record<string, unknown>);
       if (msg.type === "result") {
         const r = msg as unknown as {
           subtype: string; result?: string; total_cost_usd: number; num_turns: number; is_error?: boolean;
