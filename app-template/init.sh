@@ -20,4 +20,6 @@ for label in "Invoice 4821" "Error: disk full" "Meeting notes Q3" "Boarding pass
   "$AXCLI" fixture "fixtures/fixture_$i.png" "$label" >/dev/null
 done
 "$AXCLI" fixture fixtures/fixture_large.png "Large capture" --size 6000x4000 >/dev/null
+# Realistic screenshots of public web pages (real_*.png), so designs are judged on real content.
+"$(dirname "$AXCLI")/../../../realistic_fixtures.sh" fixtures >/dev/null 2>&1 || true
 echo "seeded $(ls fixtures | wc -l | tr -d ' ') test images in fixtures/"

@@ -18,6 +18,8 @@ export interface AgentRun {
   macTools: boolean;
   /** Absolute paths (files or directories) the agent may Write/Edit. */
   writable: string[];
+  /** Absolute paths inside `writable` that stay off limits (e.g. design files a sprint owns). */
+  denied?: string[];
   maxTurns: number;
   maxBudgetUsd?: number;
   appName: string;
@@ -54,8 +56,9 @@ function trackWindow(log: EventLog, a: AgentRun, msg: Record<string, unknown>) {
   }
 }
 
-function writeGuard(writable: string[], cwd: string): CanUseTool {
+function writeGuard(writable: string[], cwd: string, denied: string[] = []): CanUseTool {
   const roots = writable.map((p) => resolve(p));
+  const blocked = denied.map((p) => resolve(p));
   return async (toolName, input) => {
     if (["Write", "Edit", "MultiEdit", "NotebookEdit"].includes(toolName)) {
       const target = resolve(cwd, String(input.file_path ?? input.notebook_path ?? ""));
@@ -63,6 +66,13 @@ function writeGuard(writable: string[], cwd: string): CanUseTool {
       if (!allowed) {
         return { behavior: "deny", message: `Writing ${target} is not allowed. You may only write: ${roots.join(", ")}` };
       }
+      if (blocked.some((b) => target === b || target.startsWith(b + sep))) {
+        return { behavior: "deny", message: `${target} is owned by the design track. Call into it from other files; if it needs a change, say so in handoff.md.` };
+      }
+    }
+    // Whole-screen capture would record the user's private work: only single-window (-l) captures.
+    if (toolName === "Bash" && /\bscreencapture\b/.test(String(input.command ?? "")) && !/\bscreencapture\b[^|;&]*\s-l\s*\d/.test(String(input.command))) {
+      return { behavior: "deny", message: "Whole-screen screencapture is not allowed on the user's Mac. Use the screenshot or record_frames tool (with title for panels)." };
     }
     return { behavior: "allow", updatedInput: input };
   };
@@ -97,7 +107,7 @@ export async function runAgent(log: EventLog, a: AgentRun): Promise<AgentOutcome
         // Only the MCP servers passed here. Without this, the user's claude.ai connectors
         // (Notion, Slack, Figma, ...) add ~140k tokens of tool definitions to every request.
         strictMcpConfig: true,
-        canUseTool: writeGuard(a.writable, a.cwd),
+        canUseTool: writeGuard(a.writable, a.cwd, a.denied),
         permissionMode: "default",
         // Isolation: no user/project settings, CLAUDE.md or plugins leak into the agents.
         settingSources: [],

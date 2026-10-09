@@ -382,10 +382,12 @@ case "window-id":
     // Prints "<window_id> <x>,<y>,<w>,<h>" for the app's biggest on-screen normal window.
     let app = requireApp()
     let title = options["title"]
+    // Without --title: the biggest normal window. With --title: any of the app's on-screen
+    // windows whose title matches, including panels above layer 0 (e.g. a strip at the screen edge).
     let candidates = cgWindows(pid: app.processIdentifier).filter { w in
-        guard w["onscreen"] as? Bool == true, w["layer"] as? Int == 0 else { return false }
+        guard w["onscreen"] as? Bool == true else { return false }
         if let title { return (w["title"] as? String ?? "").localizedCaseInsensitiveContains(title) }
-        return true
+        return w["layer"] as? Int == 0
     }
     let best = candidates.max { a, b in
         let fa = a["frame"] as! [Int], fb = b["frame"] as! [Int]

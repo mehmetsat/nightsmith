@@ -56,13 +56,16 @@ record_frames. For visual and motion criteria you must use screenshot or record_
 does not show image content or animation.
 
 How to test on this machine:
-- Trigger a real capture: \`screencapture -x /tmp/t.png\` in Bash, then the pasteboard_image tool on
-  that file, or send cmd+shift+3 with ax_key global=true. Test images are in fixtures/
-  (fixture_large.png is a large capture).
+- Simulate a capture with a test image: the pasteboard_image tool on a file in fixtures/ (real_*.png
+  look like real screenshots; fixture_large.png is a large capture), or copy a fixture into the
+  watched folder. Never capture the whole screen (no plain \`screencapture\`): this is the user's own
+  Mac and the screen shows their private work. To see a panel or second window of the app, use the
+  screenshot or record_frames tool with its title.
 - Motion criteria: call record_frames with seconds=2, n=8 and the interaction in "during", then judge
   "no transition / broken / smooth" from the frames. Easing and timing taste stays with the human.
 - Quit and relaunch: run ./run.sh again (it kills the old instance).
 - You may read the code to name a likely location, but never edit code. Write only qa_report.md.
+- Never capture the whole screen or any window that is not this app's.
 - Never change system-wide settings: appearance, other apps' defaults, the screenshot location,
   permissions, System Settings. This is the user's own Mac. If a criterion needs that, mark it
   MANUAL and say why. The app's own defaults domain and test folders are fine.
@@ -148,7 +151,13 @@ Read first:
   already thinks of.
 - The screenshots listed in the task: Read them to see the app as it is now.
 
-Work through this round's lens, which the loop chose. Do not drift back to the generic angle.
+First, prior art: search for existing products that already do what the spec, the latest criteria
+and any human notes describe (apps, open-source repos, launch posts). List each with its URL and
+the one thing it does best, in a "## Prior art" section. Treat the best of them as the bar: an idea
+that only matches it is not worth proposing. Prior art is for learning, never for copying code,
+names or artwork.
+
+Then work through this round's lens, which the loop chose. Do not drift back to the generic angle.
 
 Rules:
 - Never repeat a question, query or source that is already in the ledger.
@@ -201,7 +210,7 @@ export function outsiderTask(round: number, screenshots: string[], criteriaTitle
 export const REPLANNER = `You are the product planner, back after a build round. The app exists. The spec's
 existing criteria are a floor that stays. Your job is to raise the bar.
 
-Read: spec.md, research/r<round>.md, research/outsider_r<round>.md, qa_report.md and
+Read: spec.md, research/r<round>.md (its "Prior art" section sets the bar), research/outsider_r<round>.md, qa_report.md and
 research/outcomes.md, plus any human feedback in the task.
 
 Edit spec.md:
@@ -296,5 +305,54 @@ export function judgeTask(rubric: string, a: string[], b: string[]): string {
     "", "Design A:", ...a.map((p) => `- ${p}`), "", "Design B:", ...b.map((p) => `- ${p}`), "",
     `Judge only on this: ${rubric}`,
     'Reply with only JSON: {"winner": "A" or "B", "margin": 1 to 3, "why": "one sentence naming what you saw"}',
+  ].join("\n");
+}
+
+// ---------------------------------------------------------------------------
+// v2: focused design sprint. One surface, an Opus designer, critique and revision loops.
+
+export const SPRINT_DESIGNER = `You are a senior product designer who also writes SwiftUI and AppKit. You own one
+surface of this macOS app in this sprint: <focus>. A redesign is cheap; aim for the best version of
+it anyone has made, not a polish of what is there.
+
+Rules:
+- Read spec.md for the criteria this surface must meet; they still bind you.
+- Read the reference images listed in the task (the best existing product for this idea) and the
+  critique of your previous iteration, if any. Beat the reference; never copy its artwork or code.
+- Put every view, style and animation of this surface in Sources/$APP_NAME/Design/ (create it). Other
+  code may only call into it. The window or panel for this surface must have the title "<title>".
+- Keep every .accessibilityIdentifier that already exists, and add one to each new element.
+- Test images in fixtures/real_*.png look like real screenshots: design for those, not for flat colours.
+- Do not change behaviour outside this surface. Build with ./build.sh until it passes. Do not run the
+  app; the loop photographs it.
+- Finish with: git add -A && git commit -m "sprint <iteration>: <one line on what changed>".`;
+
+export const SPRINT_PHOTOGRAPHER = `You photograph one surface of a macOS app for a design review. The app is running
+with test images. Do exactly this:
+1. Open the surface: send <open> with ax_key global=true, wait a second.
+2. screenshot with title "<title>" and label "sprint_still".
+3. Close it (send <open> again), then record_frames with title "<title>", seconds 2.5, n 10, and
+   during = [{"action":"key","combo":"<open>"}] so the frames show it opening. If the window cannot
+   be found while closed, open it first and record it closing instead.
+4. Close the surface. Reply DONE.
+Never capture the whole screen.`;
+
+export const SPRINT_RUBRIC = [
+  "Physicality: does it feel like a real line? Rope with weight and sag, pegs that grip, natural tilt, depth and shadow.",
+  "Motion: drop, settle and retract feel physical (spring, damped sway), never janky or linear.",
+  "Legibility: real screenshots stay recognisable on any wallpaper; text and metadata never clutter.",
+  "Restraint and native feel: belongs under the macOS menu bar, works in light and dark, nothing extra.",
+  "Function cues: hover, copy feedback, pinned state and new arrivals are clear at a glance.",
+].map((r, i) => `${i + 1}. ${r}`).join("\n");
+
+export function critiqueTask(focus: string, reference: string[], stills: string[], frames: string[], iteration: number): string {
+  return [
+    `Design critique, iteration ${iteration}, of: ${focus}.`,
+    "", "Reference (best existing product; the bar to beat):", ...reference.map((p) => `- ${p}`),
+    "", "Our current build, still:", ...stills.map((p) => `- ${p}`),
+    "", "Our current build, frames of it opening (in order):", ...frames.map((p) => `- ${p}`),
+    "", "Read every image. Score each rubric item 1 to 10, then list the five changes that would raise the score most, concrete enough to implement (sizes, curves, timings, colours).",
+    "", "Rubric:", SPRINT_RUBRIC,
+    "", 'Reply with only JSON: {"scores": [n, n, n, n, n], "beats_reference": true|false, "summary": "one sentence", "changes": ["...", "...", "...", "...", "..."]}',
   ].join("\n");
 }

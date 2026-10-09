@@ -172,6 +172,8 @@ export class Harness {
 
   /** True when the workspace came from an earlier run: round 1 then fixes, it does not build from scratch. */
   continuing = false;
+  /** Workspace-relative paths the generator may not write (design files a sprint owns). */
+  protectedPaths: string[] = [];
 
   generator(round: number, buildErrors: string | null, extraTask = ""): Promise<AgentOutcome> {
     return this.agent({
@@ -179,7 +181,8 @@ export class Harness {
       rolePrompt: GENERATOR.replaceAll("$APP_NAME", this.opts.appName),
       task: generatorTask(round, this.opts.appName, buildErrors, this.continuing) + (extraTask ? "\n\n" + extraTask : ""),
       builtinTools: ["Bash", "Read", "Write", "Edit", "Glob", "Grep"], macTools: true,
-      writable: this.generatorWritable(), maxTurns: this.opts.generatorTurns,
+      writable: this.generatorWritable(), denied: this.protectedPaths.map((p) => join(this.ws, p)),
+      maxTurns: this.opts.generatorTurns,
     });
   }
 

@@ -102,8 +102,8 @@ export function macToolsServer(ctx: MacToolContext) {
       ),
       tool(
         "screenshot",
-        `PNG of ${ctx.appName}'s main window only, returned as an image. Use it for every visual criterion.`,
-        { title: z.string().optional().describe("pick the window whose title contains this"), label: z.string().optional().describe("short file label, e.g. 'grid_empty'") },
+        `PNG of one of ${ctx.appName}'s windows, returned as an image. Default: the main window. Pass title to capture another window or panel (e.g. a strip at the screen edge). Never capture the whole screen.`,
+        { title: z.string().optional().describe("window title substring; also finds floating panels"), label: z.string().optional().describe("short file label, e.g. 'grid_empty'") },
         async (a) => {
           const out = shotPath((a.label ?? "shot").replace(/[^a-z0-9_-]/gi, "_").slice(0, 40));
           const r = await run(join(ctx.toolsDir, "screenshot.sh"), [ctx.appName, out, ...(a.title ? ["--title", a.title] : [])]);
@@ -118,6 +118,7 @@ export function macToolsServer(ctx: MacToolContext) {
         {
           seconds: z.number().min(0.5).max(10),
           n: z.number().int().min(2).max(12),
+          title: z.string().optional().describe("record this window or panel instead of the main window"),
           during: z
             .array(z.object({
               action: z.enum(["click", "doubleclick", "key", "type"]),
@@ -130,7 +131,7 @@ export function macToolsServer(ctx: MacToolContext) {
         },
         async (a) => {
           const dir = shotPath("frames").replace(/\.png$/, "");
-          const rec = spawn(join(ctx.toolsDir, "record_frames.sh"), [String(a.seconds), String(a.n), ctx.appName, dir], { env });
+          const rec = spawn(join(ctx.toolsDir, "record_frames.sh"), [String(a.seconds), String(a.n), ctx.appName, dir, ...(a.title ? ["--title", a.title] : [])], { env });
           let out = "", err = "";
           rec.stdout.on("data", (d) => (out += d));
           rec.stderr.on("data", (d) => (err += d));

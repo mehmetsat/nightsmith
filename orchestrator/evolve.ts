@@ -22,6 +22,7 @@ import { guardSpec, parseCriteria, parseQaReport, scoreRound, writeCriteria, typ
 import { startPanel } from "./panel/server.ts";
 import { Harness, RUNS, Stop, parseModels } from "./harness.ts";
 import { designRound } from "./design.ts";
+import { designSprint } from "./sprint.ts";
 import { ensureTasks, runTasks, taskRegressions, type TaskResult, type UserTask } from "./usertasks.ts";
 
 const { values: args } = parseArgs({
@@ -31,7 +32,7 @@ const { values: args } = parseArgs({
     "from-run": { type: "string" },
     "run-id": { type: "string" },
     "max-rounds": { type: "string", default: "20" },
-    models: { type: "string", default: "planner=sonnet,generator=haiku,evaluator=sonnet,researcher=sonnet,outsider=sonnet,cold=haiku,director=sonnet,designer=sonnet,photographer=haiku,judge=sonnet,user=haiku" },
+    models: { type: "string", default: "planner=sonnet,generator=haiku,evaluator=sonnet,researcher=sonnet,outsider=sonnet,cold=haiku,director=sonnet,designer=sonnet,photographer=haiku,judge=sonnet,user=haiku,sprint=opus" },
     "app-name": { type: "string", default: "ShotBox" },
     "panel-port": { type: "string", default: "4317" },
     "budget-usd": { type: "string", default: "60" },
@@ -47,6 +48,13 @@ const { values: args } = parseArgs({
     "tasks-every": { type: "string", default: "1" },
     "no-design": { type: "boolean", default: false },
     "no-tasks": { type: "boolean", default: false },
+    // focused design sprint on one surface, run once in round 1
+    sprint: { type: "string" },
+    "sprint-title": { type: "string" },
+    "sprint-open": { type: "string" },
+    "sprint-iterations": { type: "string", default: "3" },
+    "sprint-reference": { type: "string" },
+    "sprint-min-score": { type: "string", default: "7" },
     "keep-panel": { type: "boolean", default: false },
   },
 });
@@ -84,6 +92,8 @@ interface State {
   vetoed: string[];              // idea ids the human vetoed
   notes: string[];               // human notes not yet given to a replan
   pickDesign?: string | null;    // "r4-2": the human prefers this design candidate
+  protected?: string[];          // workspace paths the generator may not write (sprint-owned design)
+  sprintDone?: boolean;
 }
 const statePath = join(h.log.dir, "state.json");
 const st: State = existsSync(statePath)
@@ -277,6 +287,7 @@ interface RoundRec { round: number; build_ok: boolean; score: RoundScore | null;
 async function main() {
   await h.setupWorkspace({ prompt: args.prompt, spec: args.spec, fromRun: args["from-run"] });
   h.continuing = !!args["from-run"];
+  h.protectedPaths = st.protected ?? [];
   h.keepAwake();
   const panelUrl = await startPanel(RUNS, Number(args["panel-port"])).catch(() => null);
   console.log(`run ${runId} (evolve)\nworkspace ${h.ws}\npanel ${panelUrl ? `${panelUrl}/?run=${runId}` : "(port busy; the panel already running shows this run too)"}`);
@@ -345,6 +356,19 @@ async function main() {
         outcome(`design ${st.pickDesign}: picked by the human in round ${round}${r.code === 0 ? "" : " (merge failed)"}`);
         st.pickDesign = null; save();
       }
+      // Focused design sprint on one surface, once, before the generator touches it again.
+      if (args.sprint && !st.sprintDone) {
+        const refDir = args["sprint-reference"];
+        const reference = refDir && existsSync(refDir) ? readdirSync(refDir).filter((f) => /\.(png|jpe?g)$/i.test(f)).map((f) => join(refDir, f)).slice(0, 6) : [];
+        const sp = await designSprint(h, round, {
+          focus: args.sprint, title: args["sprint-title"] ?? args.sprint, open: args["sprint-open"] ?? "",
+          iterations: Number(args["sprint-iterations"]), reference, minScore: Number(args["sprint-min-score"]),
+        }, models);
+        outcome(sp.notes);
+        if (sp.merged) { st.protected = [...new Set([...(st.protected ?? []), sp.protectedPath])]; h.protectedPaths = st.protected; }
+        st.sprintDone = true; save();
+        await h.waitForWindow(cfg.windowCap, round);
+      }
       // Design track: a full redesign is cheap, so search far-apart directions every few rounds.
       if (cfg.designEvery && round % cfg.designEvery === 0 && rounds.at(-1)?.build_ok !== false) {
         const d = await designRound(h, round, cfg.designK, random, models, latestShots(6));
@@ -355,6 +379,7 @@ async function main() {
       const tasksNote: string[] = [];
       if (usability.length) tasksNote.push(`USABILITY REGRESSIONS from the timed user tasks (they worked before, now a test user fails): ${usability.join("; ")}. Fix these too.`);
       if (st.pendingRegression.length) tasksNote.push(`REGRESSIONS, fix these first. They passed before and fail now: ${st.pendingRegression.join(", ")}. If you cannot fix them without undoing your last change, undo it.`);
+      if (h.protectedPaths.length) tasksNote.push(`${h.protectedPaths.join(", ")} is owned by the design track: call into it, never rewrite it. If it needs a change, write that in handoff.md.`);
       if (added.length) tasksNote.push(`The spec gained new criteria this round: ${added.join(", ")}. Implement them, then fix any FAIL in qa_report.md. Keep every criterion that passes today passing.`);
       const gen = await h.generator(round, buildErrors, tasksNote.join("\n\n"));
       h.snapshot("handoff.md", round);
