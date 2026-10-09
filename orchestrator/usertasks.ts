@@ -40,10 +40,11 @@ export async function runTasks(h: Harness, round: number, tasks: UserTask[], mod
     await h.sh("pkill", ["-x", h.opts.appName]);
     // Fresh state for every task: clear the test folders, then the task's own setup.
     await inWorkspace(h, `for d in "$SHOTBOX_DATA_DIR" "$SHOTBOX_WATCH_DIR"; do [ -n "$d" ] && rm -rf "$d"; done; [ -n "$SHOTBOX_WATCH_DIR" ] && mkdir -p "$SHOTBOX_WATCH_DIR"; true`);
-    for (const cmd of t.setup ?? []) await inWorkspace(h, cmd);
+    // Launch first, then set up: a watcher may only pick up files that arrive while it runs.
     const launch = await h.sh("./run.sh", []);
     if (launch.code !== 0) { results.push({ id: t.id, goal: t.goal, ok: false, steps: null, seconds: 0, gaveUp: "app did not launch", check: t.check }); continue; }
-    await new Promise((r) => setTimeout(r, 1500)); // let the watcher ingest the setup files
+    for (const cmd of t.setup ?? []) await inWorkspace(h, cmd);
+    await new Promise((r) => setTimeout(r, 3000)); // let the app ingest and OCR the setup files
 
     const t0 = Date.now();
     const o = await h.agent({

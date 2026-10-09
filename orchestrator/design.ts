@@ -54,8 +54,11 @@ export async function designRound(h: Harness, round: number, k: number, random: 
     if (c !== cands[0]) c.built = (await h.sh("./build.sh", [], c.dir)).code === 0;
     if (!c.built) continue;
     await h.sh("pkill", ["-x", h.opts.appName]);
-    await h.sh("bash", ["-c", `export WS="$PWD" AXCLI="${AXCLI}"; [ -f test.env ] && { set -a; . ./test.env; set +a; }; for d in "$SHOTBOX_DATA_DIR" "$SHOTBOX_WATCH_DIR"; do [ -n "$d" ] && rm -rf "$d"; done; [ -n "$SHOTBOX_WATCH_DIR" ] && mkdir -p "$SHOTBOX_WATCH_DIR" && cp fixtures/fixture_[1-5].png "$SHOTBOX_WATCH_DIR"/; true`], c.dir);
+    const env = `export WS="$PWD" AXCLI="${AXCLI}"; [ -f test.env ] && { set -a; . ./test.env; set +a; }`;
+    await h.sh("bash", ["-c", `${env}; for d in "$SHOTBOX_DATA_DIR" "$SHOTBOX_WATCH_DIR"; do [ -n "$d" ] && rm -rf "$d"; done; [ -n "$SHOTBOX_WATCH_DIR" ] && mkdir -p "$SHOTBOX_WATCH_DIR"; true`], c.dir);
     if ((await h.sh("./run.sh", [], c.dir)).code !== 0) { c.built = false; continue; }
+    // Files arrive after launch, like real captures, so a watch-only app ingests them too.
+    await h.sh("bash", ["-c", `${env}; [ -n "$SHOTBOX_WATCH_DIR" ] && for f in fixtures/fixture_[1-5].png; do cp "$f" "$SHOTBOX_WATCH_DIR"/; sleep 0.4; done; true`], c.dir);
     await new Promise((r) => setTimeout(r, 2500));
     const before = new Set(readdirSync(join(h.log.dir, "screenshots")));
     await h.agent({
