@@ -96,7 +96,9 @@ export async function designRound(h: Harness, round: number, k: number, random: 
   await Promise.all(jobs);
 
   // 5. Merge the winner if it beat the current design under at least one rubric.
-  const best = ready.filter((c) => c !== cands[0]).sort((x, y) => y.wins - x.wins)[0];
+  // Most wins; a tie goes to whoever won more of the two candidates' own head-to-head verdicts.
+  const h2h = (x: Candidate, y: Candidate) => verdicts.filter((v) => [v.a, v.b].includes(x.key) && [v.a, v.b].includes(y.key) && v.winner === x.key).length;
+  const best = ready.filter((c) => c !== cands[0]).sort((x, y) => y.wins - x.wins || h2h(y, x) - h2h(x, y))[0];
   let merged: string | null = null;
   if (best && best.beatBaseline >= 1 && best.wins > cands[0].wins) {
     const r = await h.git("merge", "--no-edit", "-q", best.branch!);
