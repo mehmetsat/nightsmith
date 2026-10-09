@@ -163,7 +163,10 @@ async function coldBaseline() {
 }
 
 async function replan(round: number): Promise<Criterion[]> {
-  const lens = LENSES[st.replans.length % LENSES.length];
+  // Continue the lens rotation across runs: the ledger travels with the workspace.
+  const ledger = existsSync(R("research/ledger.md")) ? readFileSync(R("research/ledger.md"), "utf8") : "";
+  const earlier = (ledger.match(/^## Round /gm) ?? []).length;
+  const lens = LENSES[Math.max(earlier, st.replans.length) % LENSES.length];
   const [domain] = pick(DOMAINS, random);
   const shots = latestShots();
   h.emit(round, "replan", `replan ${st.replans.length + 1}: ${firstLine(lens, 90)}`, { lens, domain, screenshots: shots.length });
