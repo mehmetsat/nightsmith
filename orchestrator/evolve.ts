@@ -16,7 +16,7 @@ import { join } from "node:path";
 import { parseArgs } from "node:util";
 import { firstLine } from "./events.ts";
 import type { AgentOutcome } from "./agents/common.ts";
-import { COLD, OUTSIDER, REPLANNER, RESEARCHER, coldTask, outsiderTask, replannerTask, researcherTask } from "./agents/prompts.ts";
+import { COLD, EVALUATOR, OUTSIDER, REPLANNER, RESEARCHER, coldTask, outsiderTask, replannerTask, researcherTask } from "./agents/prompts.ts";
 import { DOMAINS, LENSES, pick, rng } from "./agents/lenses.ts";
 import { guardSpec, parseCriteria, parseQaReport, scoreRound, writeCriteria, type Criterion, type RoundScore } from "./criteria.ts";
 import { startPanel } from "./panel/server.ts";
@@ -216,6 +216,33 @@ async function replan(round: number): Promise<Criterion[]> {
 }
 
 // ---------------------------------------------------------------------------
+// Regression check: build the last good commit in a worktree and test only the suspects there.
+
+async function confirmOnLastGood(round: number, ids: string[], criteria: Criterion[]): Promise<string[]> {
+  const dir = join(h.log.dir, "check", `r${round}`);
+  mkdirSync(join(h.log.dir, "check"), { recursive: true });
+  await h.git("worktree", "add", "-q", "--detach", dir, st.lastGood!);
+  try {
+    if ((await h.sh("./build.sh", [], dir)).code !== 0) return [];
+    const list = criteria.filter((c) => ids.includes(c.id)).map((c) => `- ${c.id}: ${c.text}\n  verify: ${c.verify}`).join("\n");
+    await h.agent({
+      agent: "evaluator", round, model: models.evaluator, cwd: dir, rolePrompt: EVALUATOR,
+      task: `Regression check on an older build. Test ONLY these criteria, exactly as their verify steps say, and write qa_check.md with the usual JSON block (results for these ids only):\n${list}`,
+      builtinTools: ["Bash", "Read", "Write", "Glob", "Grep"], macTools: true, writable: [join(dir, "qa_check.md")], maxTurns: 80,
+    });
+    await h.sh("pkill", ["-x", appName]);
+    const f = join(dir, "qa_check.md");
+    if (!existsSync(f)) return [];
+    const v = parseQaReport(readFileSync(f, "utf8"));
+    return v.results.filter((r) => ids.includes(r.id) && r.status === "FAIL" && r.fail_kind !== "unverified").map((r) => r.id);
+  } catch {
+    return [];
+  } finally {
+    await h.git("worktree", "remove", "--force", dir);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Checkpoint page for the human: a report, never a gate.
 
 function checkpoint(round: number, rounds: RoundRec[]) {
@@ -362,7 +389,17 @@ async function main() {
       // Ratchet: what passed once must keep passing.
       if (rec.score) {
         const failing = new Set(rec.score.hard_fail_ids);
-        const regressed = st.ratchet.filter((id) => failing.has(id) && criteria.some((c) => c.id === id));
+        let regressed = st.ratchet.filter((id) => failing.has(id) && criteria.some((c) => c.id === id));
+        // QA is not deterministic: a deeper session can find a bug an earlier one missed. Only a
+        // criterion that passes on the last good commit and fails now is a regression.
+        if (regressed.length && st.lastGood) {
+          const already = await confirmOnLastGood(round, regressed, criteria);
+          if (already.length) {
+            h.emit(round, "regression", `not regressions, already failing on ${st.lastGood.slice(0, 7)}: ${already.join(", ")}`, { preexisting: already });
+            st.ratchet = st.ratchet.filter((id) => !already.includes(id));
+            regressed = regressed.filter((id) => !already.includes(id));
+          }
+        }
         // Revert only for breakage QA actually saw; "could not verify" is a note, not proof of damage.
         const seenBroken = new Set(rec.score.hard_bug_ids);
         if (regressed.length && st.pendingRegression.length && st.lastGood && regressed.some((id) => seenBroken.has(id) && st.pendingRegression.includes(id))) {
