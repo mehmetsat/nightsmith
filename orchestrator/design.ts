@@ -46,7 +46,8 @@ export async function designRound(h: Harness, round: number, k: number, random: 
     rolePrompt: DESIGNER.replaceAll("<round>", String(round)).replaceAll("<k>", String(i + 1)),
     task: `Implement direction ${i + 1} from research/design_r${round}.md. Worktree: ${c.dir}`,
     builtinTools: ["Bash", "Read", "Write", "Edit", "Glob", "Grep"], macTools: false,
-    writable: h.generatorWritable(c.dir), maxTurns: 150,
+    // A sprint-owned surface is off limits to the wide design round too.
+    writable: h.generatorWritable(c.dir), denied: h.protectedPaths.map((p) => join(c.dir, p)), maxTurns: 150,
   })));
 
   // 3. Build and photograph each candidate, one at a time (they share the app name and the Mac).
