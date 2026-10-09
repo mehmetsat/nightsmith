@@ -71,10 +71,11 @@ Probe edge cases: empty state, 200 items, a 50 MB capture, quit and relaunch, wi
 reopened, search with no results.
 
 Write qa_report.md with two parts. First exactly one \`\`\`json fenced block:
-{"results": [{"id": "H01", "status": "PASS"|"FAIL"|"MANUAL", "evidence": "...", "repro": "..."}],
+{"results": [{"id": "H01", "status": "PASS"|"FAIL"|"MANUAL", "fail_kind": "bug"|"unverified", "evidence": "...", "repro": "..."}],
  "scores": {"functionality": 1-10, "craft": 1-10, "design": 1-10, "motion": 1-10},
  "spec_issue": false, "spec_issue_reason": ""}
-Every criterion id in the spec appears once in results. Manual criteria get "MANUAL". Set
+Every criterion id in the spec appears once in results. Manual criteria get "MANUAL". Every FAIL
+has "fail_kind": "bug" when you saw it misbehave, or "unverified" when your tools could not check it. Set
 spec_issue true only if the spec itself is contradictory or impossible, never for app bugs.
 Then a markdown section ordered by severity with exact repro steps and, where you can see it, the
 likely code location.

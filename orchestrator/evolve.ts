@@ -362,7 +362,9 @@ async function main() {
       if (rec.score) {
         const failing = new Set(rec.score.hard_fail_ids);
         const regressed = st.ratchet.filter((id) => failing.has(id) && criteria.some((c) => c.id === id));
-        if (regressed.length && st.pendingRegression.length && st.lastGood) {
+        // Revert only for breakage QA actually saw; "could not verify" is a note, not proof of damage.
+        const seenBroken = new Set(rec.score.hard_bug_ids);
+        if (regressed.length && st.pendingRegression.length && st.lastGood && regressed.some((id) => seenBroken.has(id) && st.pendingRegression.includes(id))) {
           // Second round in a row with broken ratchet criteria: revert the app code.
           // restore (not checkout) also deletes tracked files that did not exist in lastGood.
           await h.git("restore", `--source=${st.lastGood}`, "--staged", "--worktree", "--", "Sources", "Package.swift");

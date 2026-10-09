@@ -16,6 +16,8 @@ export interface Criterion {
 export interface QaResult {
   id: string;
   status: "PASS" | "FAIL" | "MANUAL";
+  /** bug: QA saw it misbehave. unverified: QA's tools could not check it. */
+  fail_kind?: "bug" | "unverified";
   evidence?: string;
   repro?: string;
 }
@@ -31,6 +33,8 @@ export interface RoundScore {
   hard_pass: number;
   hard_total: number;
   hard_fail_ids: string[];
+  /** Hard FAILs QA saw misbehave (fail_kind "bug" or unspecified). The ratchet reverts only on these. */
+  hard_bug_ids: string[];
   missing_ids: string[];
   soft_pass: number;
   soft_total: number;
@@ -86,6 +90,7 @@ export function scoreRound(criteria: Criterion[], v: QaVerdict): RoundScore {
     hard_total: hard.length,
     // A hard criterion QA skipped counts as failed.
     hard_fail_ids: hard.filter((c) => byId.get(c.id)?.status !== "PASS").map((c) => c.id),
+    hard_bug_ids: hard.filter((c) => { const r = byId.get(c.id); return r != null && r.status === "FAIL" && r.fail_kind !== "unverified"; }).map((c) => c.id),
     missing_ids: criteria.filter((c) => !byId.has(c.id)).map((c) => c.id),
     soft_pass: soft.filter((c) => byId.get(c.id)?.status === "PASS").length,
     soft_total: soft.length,
