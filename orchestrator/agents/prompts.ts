@@ -324,6 +324,8 @@ Rules:
 - Keep that window fixed in place and transparent, at its full size, and animate the content inside it
   (the line, the prints, their opacity and offset). Do not move or resize the window to animate:
   the review records the window's own pixels, so motion done by moving the window is invisible to it.
+- Do not use system blur materials (NSVisualEffectView) for the backdrop: window capture shows them as
+  a blank colour. Draw the backdrop yourself (a gradient or scrim).
 - Keep every .accessibilityIdentifier that already exists, and add one to each new element.
 - Test images in fixtures/real_*.png look like real screenshots: design for those, not for flat colours.
 - Do not change behaviour outside this surface. Build with ./build.sh until it passes. Do not run the

@@ -4,7 +4,7 @@
 // build, and it is merged only if it wins and clears an absolute score. The design files it owns
 // become protected from the generator, so later rounds cannot slide the craft back.
 
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { JUDGE_RUBRICS, SPRINT_DESIGNER, SPRINT_PHOTOGRAPHER, critiqueTask, judgeTask } from "./agents/prompts.ts";
 import { Harness, TOOLS } from "./harness.ts";
@@ -54,6 +54,13 @@ export async function designSprint(h: Harness, round: number, cfg: SprintConfig,
     if ((await h.sh("./build.sh", [], dir)).code !== 0) { critique = "The build failed. Fix it first; keep the design."; scores.push([0, 0, 0, 0, 0]); continue; }
     last = await photograph(h, round, dir, cfg, models);
     if (!last.stills.length) { critique = `The surface was not found on screen: its window or panel must be titled "${cfg.title}" and open with ${cfg.open}.`; scores.push([0, 0, 0, 0, 0]); continue; }
+    // A nearly empty PNG is a blank capture (night2, iteration 3: a blur material came out solid white).
+    if (last.stills.every((p) => statSync(p).size < 20_000)) {
+      critique = "Your surface rendered BLANK in the window capture: the still is a single flat colour. Usually a system blur material (NSVisualEffectView) or layer that window capture cannot see, or content that is not drawn yet. Draw the backdrop yourself (a plain gradient or scrim) and make sure the content is visible as soon as the panel is ordered front. Keep the rest of your design.";
+      scores.push([0, 0, 0, 0, 0]);
+      h.emit(round, "design", `sprint ${i}: blank capture, sent back`, { iteration: i, blank: true });
+      continue;
+    }
 
     const c = await h.agent({
       agent: "judge", round, model: models.sprint, rolePrompt: "You are an exacting design critic. Specific, visual, actionable.",
