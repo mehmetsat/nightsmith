@@ -91,7 +91,11 @@ export function startPanel(runsRoot: string, port: number): Promise<string> {
     }
     res.writeHead(404).end("not found");
   });
-  return new Promise((ok) => server.listen(port, "127.0.0.1", () => ok(`http://127.0.0.1:${port}`)));
+  // A busy port (another panel already serves runs/) must not take the orchestrator down.
+  return new Promise((ok, fail) => {
+    server.once("error", fail);
+    server.listen(port, "127.0.0.1", () => ok(`http://127.0.0.1:${port}`));
+  });
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
