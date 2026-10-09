@@ -340,7 +340,13 @@ case "check":
     // A locked screen blocks screenshots and accessibility for every app; callers must wait.
     let session = CGSessionCopyCurrentDictionary() as? [String: Any] ?? [:]
     let locked = (session["CGSSessionScreenIsLocked"] as? Bool) ?? ((session["CGSSessionScreenIsLocked"] as? Int) == 1)
-    emit(["accessibility": AXIsProcessTrusted(), "screen_recording": CGPreflightScreenCaptureAccess(), "screen_locked": locked])
+    // What actually matters for testing: does the accessibility API answer? The Dock always has
+    // children when it does; on a locked screen every app's tree comes back empty.
+    var axUsable: Any = NSNull()
+    if let dock = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == "com.apple.dock" }) {
+        axUsable = !children(AXUIElementCreateApplication(dock.processIdentifier)).isEmpty
+    }
+    emit(["accessibility": AXIsProcessTrusted(), "screen_recording": CGPreflightScreenCaptureAccess(), "screen_locked": locked, "ax_usable": axUsable])
 
 case "windows":
     let pid = options["app"] != nil || ProcessInfo.processInfo.environment["AXCLI_APP"] != nil

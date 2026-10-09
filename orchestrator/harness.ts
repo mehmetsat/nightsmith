@@ -199,7 +199,8 @@ export class Harness {
 
   async screenLocked(): Promise<boolean> {
     const r = await this.sh(join(TOOLS, "axcli/.build/release/axcli"), ["check"]);
-    try { return JSON.parse(r.out).screen_locked === true; } catch { return false; }
+    // Blocked means the accessibility API returns nothing; the lock flag is the fallback.
+    try { const c = JSON.parse(r.out); return c.ax_usable === false || (c.ax_usable == null && c.screen_locked === true); } catch { return false; }
   }
 
   /** Waits (checking every 30 s) while the screen is locked. Returns the minutes waited. */
