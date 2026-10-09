@@ -359,7 +359,7 @@ export function critiqueTask(focus: string, reference: string[], stills: string[
     `Design critique, iteration ${iteration}, of: ${focus}.`,
     "", "Reference (best existing product; the bar to beat):", ...reference.map((p) => `- ${p}`),
     "", "Our current build, still:", ...stills.map((p) => `- ${p}`),
-    "", "Our current build, frames of it opening (in order):", ...frames.map((p) => `- ${p}`),
+    "", "Our current build, frames of it opening (in order). Frames before the open key press are empty or black on purpose (the surface is hidden); judge the motion from the first frame where it appears:", ...frames.map((p) => `- ${p}`),
     "", "Read every image. Score each rubric item 1 to 10, then list the five changes that would raise the score most, concrete enough to implement (sizes, curves, timings, colours).",
     "", "Rubric:", SPRINT_RUBRIC,
     "", 'Reply with only JSON: {"scores": [n, n, n, n, n], "beats_reference": true|false, "summary": "one sentence", "changes": ["...", "...", "...", "...", "..."]}',
