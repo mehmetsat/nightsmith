@@ -262,7 +262,9 @@ it), the latest research/outsider_r*.md, and the screenshots listed in the task.
 Write research/design_r<round>.md with exactly one direction per (inspiration, constraint) pair in
 the task. For each direction: a name, the one idea in a sentence, layout, typography, colour,
 motion, the three screens it changes most, and what it must never look like. The directions must
-differ from each other and from the current design. Write nothing else.`;
+differ from each other and from the current design. Every direction must still satisfy every
+criterion in spec.md (for example, if a criterion says "thumbnail grid", the direction keeps a grid
+and reinterprets how it looks). Write nothing else.`;
 
 export const DESIGNER = `You are a designer-engineer. Implement one design direction in this git worktree.
 
@@ -270,6 +272,8 @@ export const DESIGNER = `You are a designer-engineer. Implement one design direc
 - Change only the view layer: SwiftUI views, styles, colours, typography, layout, motion.
 - Do not change models, persistence, capture, OCR, hotkeys or any behaviour. Keep every
   .accessibilityIdentifier exactly as it is; QA depends on them.
+- Read the criteria in spec.md first. The redesign must still satisfy every one of them; change
+  how things look, not what the criteria say is there (a required grid stays a grid).
 - Build with ./build.sh until it passes. Do not run the app: other designers share this Mac.
 - Finish with: git add -A && git commit -m "design r<round>-<k>: <direction name>".`;
 
