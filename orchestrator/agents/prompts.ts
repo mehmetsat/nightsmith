@@ -95,9 +95,9 @@ Calibration: past verdicts a human reviewer overturned. Do not repeat these.
   Every control a criterion names must be exercised. Something you did not check is FAIL with
   evidence "not verified", never PASS.`;
 
-export function generatorTask(round: number, appName: string, buildErrors: string | null): string {
+export function generatorTask(round: number, appName: string, buildErrors: string | null, continuing = false): string {
   const lines = [`Round ${round}. App name: ${appName}.`];
-  if (round === 1) lines.push("Implement the full spec in spec.md.");
+  if (round === 1 && !continuing) lines.push("Implement the full spec in spec.md.");
   else lines.push("Fix the criteria marked FAIL in qa_report.md, in the order given.");
   if (buildErrors) {
     lines.push(

@@ -170,11 +170,14 @@ export class Harness {
     return ["Sources", "Tests", "Package.swift", "Package.resolved", "Info.plist", "handoff.md", "Resources"].map((p) => join(ws, p));
   }
 
+  /** True when the workspace came from an earlier run: round 1 then fixes, it does not build from scratch. */
+  continuing = false;
+
   generator(round: number, buildErrors: string | null, extraTask = ""): Promise<AgentOutcome> {
     return this.agent({
       agent: "generator", round, model: this.opts.models.generator,
       rolePrompt: GENERATOR.replaceAll("$APP_NAME", this.opts.appName),
-      task: generatorTask(round, this.opts.appName, buildErrors) + (extraTask ? "\n\n" + extraTask : ""),
+      task: generatorTask(round, this.opts.appName, buildErrors, this.continuing) + (extraTask ? "\n\n" + extraTask : ""),
       builtinTools: ["Bash", "Read", "Write", "Edit", "Glob", "Grep"], macTools: true,
       writable: this.generatorWritable(), maxTurns: this.opts.generatorTurns,
     });

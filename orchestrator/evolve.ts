@@ -246,6 +246,7 @@ interface RoundRec { round: number; build_ok: boolean; score: RoundScore | null;
 
 async function main() {
   await h.setupWorkspace({ prompt: args.prompt, spec: args.spec, fromRun: args["from-run"] });
+  h.continuing = !!args["from-run"];
   h.keepAwake();
   const panelUrl = await startPanel(RUNS, Number(args["panel-port"])).catch(() => null);
   console.log(`run ${runId} (evolve)\nworkspace ${h.ws}\npanel ${panelUrl ? `${panelUrl}/?run=${runId}` : "(port busy; the panel already running shows this run too)"}`);
