@@ -40,11 +40,16 @@ export async function runTasks(h: Harness, round: number, tasks: UserTask[], mod
     await h.sh("pkill", ["-x", h.opts.appName]);
     // Fresh state for every task: clear the test folders, then the task's own setup.
     await inWorkspace(h, `for d in "$SHOTBOX_DATA_DIR" "$SHOTBOX_WATCH_DIR"; do [ -n "$d" ] && rm -rf "$d"; done; [ -n "$SHOTBOX_WATCH_DIR" ] && mkdir -p "$SHOTBOX_WATCH_DIR"; true`);
-    // Launch first, then set up: a watcher may only pick up files that arrive while it runs.
+    // Setup runs before launch (it may delete and recreate the app's folders). After launch the
+    // watch folder's files are moved out and back in one by one, so an app that only notices
+    // files arriving while it runs still ingests them, like real captures.
+    for (const cmd of t.setup ?? []) await inWorkspace(h, cmd);
     const launch = await h.sh("./run.sh", []);
     if (launch.code !== 0) { results.push({ id: t.id, goal: t.goal, ok: false, steps: null, seconds: 0, gaveUp: "app did not launch", check: t.check }); continue; }
-    for (const cmd of t.setup ?? []) await inWorkspace(h, cmd);
-    await new Promise((r) => setTimeout(r, 3000)); // let the app ingest and OCR the setup files
+    await inWorkspace(h, `[ -n "$SHOTBOX_WATCH_DIR" ] && [ -d "$SHOTBOX_WATCH_DIR" ] || exit 0
+      tmp=$(mktemp -d); mv "$SHOTBOX_WATCH_DIR"/* "$tmp"/ 2>/dev/null
+      for f in "$tmp"/*; do [ -e "$f" ] && mv "$f" "$SHOTBOX_WATCH_DIR"/ && sleep 0.6; done; rmdir "$tmp"`);
+    await new Promise((r) => setTimeout(r, 3000)); // let the app ingest and OCR them
 
     const t0 = Date.now();
     const o = await h.agent({
