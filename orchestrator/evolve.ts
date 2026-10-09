@@ -57,6 +57,8 @@ const { values: args } = parseArgs({
     "sprint-min-score": { type: "string", default: "7" },
     "sprint-brief": { type: "string" },
     "sprint-base": { type: "string" },
+    // workspace paths the generator may not write, e.g. Sources/ShotBox/Design
+    protect: { type: "string" },
     "keep-panel": { type: "boolean", default: false },
   },
 });
@@ -289,6 +291,7 @@ interface RoundRec { round: number; build_ok: boolean; score: RoundScore | null;
 async function main() {
   await h.setupWorkspace({ prompt: args.prompt, spec: args.spec, fromRun: args["from-run"] });
   h.continuing = !!args["from-run"];
+  if (args.protect) st.protected = [...new Set([...(st.protected ?? []), ...args.protect.split(",").map((p) => p.trim()).filter(Boolean)])];
   h.protectedPaths = st.protected ?? [];
   h.keepAwake();
   const panelUrl = await startPanel(RUNS, Number(args["panel-port"])).catch(() => null);

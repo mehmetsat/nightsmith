@@ -92,11 +92,13 @@ export async function designSprint(h: Harness, round: number, cfg: SprintConfig,
   } else if (last.stills.length) {
     wins = 2; // nothing to compare against: the surface did not exist before
   }
-  const merged = wins >= 1 && finalAvg >= cfg.minScore && (await h.git("merge", "--no-edit", "-q", branch)).code === 0;
+  // Merge when it beats the current build: a better design should not wait for a perfect one.
+  // minScore is the goal the next sprint aims for, logged but not a gate.
+  const merged = wins >= 1 && (await h.git("merge", "--no-edit", "-q", branch)).code === 0;
   if (!merged) await h.git("merge", "--abort");
   await h.git("worktree", "remove", "--force", dir);
 
-  const notes = `design sprint r${round} (${cfg.focus}): ${merged ? "merged" : "not merged"}, scores ${scores.map((s) => avg(s).toFixed(1)).join(" → ")}, beat current in ${wins}/2`;
+  const notes = `design sprint r${round} (${cfg.focus}): ${merged ? "merged" : "not merged"}, scores ${scores.map((s) => avg(s).toFixed(1)).join(" → ")} (goal ${cfg.minScore}), beat current in ${wins}/2`;
   writeFileSync(join(h.ws, `research/sprint_r${round}.json`), JSON.stringify({ focus: cfg.focus, scores, wins, merged, critique }, null, 2));
   h.emit(round, "design", notes, { sprint: true, merged, wins, final_avg: finalAvg });
   return { merged, scores, notes, protectedPath };
