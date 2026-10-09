@@ -48,8 +48,9 @@ export async function runTasks(h: Harness, round: number, tasks: UserTask[], mod
     if (launch.code !== 0) { results.push({ id: t.id, goal: t.goal, ok: false, steps: null, seconds: 0, gaveUp: "app did not launch", check: t.check }); continue; }
     await inWorkspace(h, `[ -n "$SHOTBOX_WATCH_DIR" ] && [ -d "$SHOTBOX_WATCH_DIR" ] || exit 0
       tmp=$(mktemp -d); mv "$SHOTBOX_WATCH_DIR"/* "$tmp"/ 2>/dev/null
-      # cp, not mv: a move inside one volume is reported as a rename, which watchers may ignore.
-      for f in "$tmp"/*; do [ -e "$f" ] && cp -p "$f" "$SHOTBOX_WATCH_DIR"/ && sleep 0.6; done; rm -rf "$tmp"`);
+      # Plain cp: a fresh file with a fresh date. mv is a rename and cp -p keeps the old date;
+      # an app that only takes files newer than its launch ignores both (checked on evo1b).
+      for f in "$tmp"/*; do [ -e "$f" ] && cp "$f" "$SHOTBOX_WATCH_DIR"/ && sleep 0.6; done; rm -rf "$tmp"`);
     await new Promise((r) => setTimeout(r, 3000)); // let the app ingest and OCR them
 
     const t0 = Date.now();
