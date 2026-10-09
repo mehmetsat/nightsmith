@@ -114,7 +114,7 @@ export function macToolsServer(ctx: MacToolContext) {
       tool(
         "record_frames",
         "Record the app window for `seconds` and return `n` evenly spaced frames. Put the interaction to judge in `during`; " +
-          "it runs ~0.3s after recording starts. Judge motion from the frames: no transition / broken / smooth.",
+          "it runs ~0.6s after recording starts. Judge motion from the frames: no transition / broken / smooth.",
         {
           seconds: z.number().min(0.5).max(10),
           n: z.number().int().min(2).max(12),
@@ -136,7 +136,7 @@ export function macToolsServer(ctx: MacToolContext) {
           rec.stdout.on("data", (d) => (out += d));
           rec.stderr.on("data", (d) => (err += d));
           const done = new Promise<number>((ok) => rec.on("close", (c) => ok(c ?? 1)));
-          await new Promise((r) => setTimeout(r, 300));
+          await new Promise((r) => setTimeout(r, 600)); // screencapture needs a moment before it records
           const actionResults: string[] = [];
           for (const act of a.during ?? []) {
             const r = await perform(act as Action);
