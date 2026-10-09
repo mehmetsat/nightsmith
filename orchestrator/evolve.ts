@@ -325,7 +325,8 @@ async function main() {
       const last = rounds.at(-1)?.score;
       const floorMet = last != null && last.hard_pass === last.hard_total;
       let added: string[] = [];
-      if (floorMet || round - st.lastReplanRound > cfg.replanEvery) {
+      // A new note from the human is worth acting on now, not two rounds later.
+      if (floorMet || round - st.lastReplanRound > cfg.replanEvery || st.notes.length) {
         criteria = await replan(round);
         added = st.replans.at(-1)!.added;
         emptyReplans = added.length ? 0 : emptyReplans + 1;
