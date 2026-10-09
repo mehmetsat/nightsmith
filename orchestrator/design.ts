@@ -5,7 +5,7 @@
 // The winner is merged only if it beats the current design; functional damage is caught by the
 // ratchet in the next QA round.
 
-import { existsSync, mkdirSync, readdirSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { DESIGNER, DIRECTOR, JUDGE_RUBRICS, PHOTOGRAPHER, judgeTask } from "./agents/prompts.ts";
 import { DESIGN_CONSTRAINTS, DOMAINS, pick } from "./agents/lenses.ts";
@@ -107,8 +107,12 @@ export async function designRound(h: Harness, round: number, k: number, random: 
   for (const c of cands.slice(1)) if (existsSync(c.dir)) await h.git("worktree", "remove", "--force", c.dir);
 
   const notes = `design round ${round}: ${merged ? `merged ${merged}` : "kept the current design"} (${cands.map((c) => `${c.key} ${c.wins} wins${c.built ? "" : ", build failed"}`).join("; ")})`;
+  // Full verdicts go to a file; an event payload over 2 KB would be cut.
+  const vrel = `research/design_r${round}_verdicts.json`;
+  writeFileSync(join(h.ws, vrel), JSON.stringify({ pairs, verdicts }, null, 2));
+  h.snapshot(vrel, round, h.ws, `design_r${round}_verdicts.json`);
   h.emit(round, "design", notes, {
-    merged, pairs, verdicts,
+    merged, verdicts_file: vrel,
     candidates: cands.map((c) => ({ key: c.key, wins: c.wins, beat_current: c.beatBaseline, built: c.built, shots: c.shots.map((s) => s.slice(s.indexOf("screenshots/"))) })),
   });
   return { merged, candidates: cands, notes };
