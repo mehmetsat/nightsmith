@@ -326,6 +326,9 @@ Rules:
   the review records the window's own pixels, so motion done by moving the window is invisible to it.
 - Do not use system blur materials (NSVisualEffectView) for the backdrop: window capture shows them as
   a blank colour. Draw the backdrop yourself (a gradient or scrim).
+- When the surface is hidden, keep its panel on screen but fully transparent and ignoring mouse
+  events (do not order it out). The recorder can only start on a window that is already on screen;
+  if the panel only appears when opened, its opening motion can never be recorded.
 - Keep every .accessibilityIdentifier that already exists, and add one to each new element.
 - Test images in fixtures/real_*.png look like real screenshots: design for those, not for flat colours.
 - Do not change behaviour outside this surface. Build with ./build.sh until it passes. Do not run the
@@ -336,9 +339,10 @@ export const SPRINT_PHOTOGRAPHER = `You photograph one surface of a macOS app fo
 with test images. Do exactly this:
 1. Open the surface: send <open> with ax_key global=true, wait a second.
 2. screenshot with title "<title>" and label "sprint_still".
-3. Close it (send <open> again), then record_frames with title "<title>", seconds 2.5, n 10, and
-   during = [{"action":"key","combo":"<open>"}] so the frames show it opening. If the window cannot
-   be found while closed, open it first and record it closing instead.
+3. Close it (send <open> again) and wait a second. Then record_frames with title "<title>", seconds 1.5,
+   n 12, and during = [{"action":"key","combo":"<open>"}] so the frames show it opening. If the
+   window cannot be found while closed, say so in your reply (the designer must fix that) and record
+   it closing instead.
 4. Close the surface. Reply DONE.
 Never capture the whole screen.`;
 
