@@ -281,6 +281,20 @@ func pressCombo(_ combo: String, pid: pid_t?) {
         flags.insert(f)
     }
     let src = CGEventSource(stateID: .hidSystemState)
+    // For system-wide combos, press and release the modifier keys themselves too. Posting only
+    // flagged key events left the system thinking ctrl was still held: later clicks arrived as
+    // ctrl-clicks (seen in evo1 round 3).
+    let modKeys: [(CGEventFlags, CGKeyCode)] = [(.maskCommand, 55), (.maskShift, 56), (.maskAlternate, 58), (.maskControl, 59)]
+    let held = modKeys.filter { flags.contains($0.0) }
+    if pid == nil {
+        var acc: CGEventFlags = []
+        for (f, k) in held {
+            acc.insert(f)
+            let e = CGEvent(keyboardEventSource: src, virtualKey: k, keyDown: true)!
+            e.flags = acc
+            post(e, to: nil)
+        }
+    }
     let down = CGEvent(keyboardEventSource: src, virtualKey: code, keyDown: true)!
     let up = CGEvent(keyboardEventSource: src, virtualKey: code, keyDown: false)!
     down.flags = flags
@@ -288,6 +302,15 @@ func pressCombo(_ combo: String, pid: pid_t?) {
     post(down, to: pid)
     usleep(20_000)
     post(up, to: pid)
+    if pid == nil {
+        var acc = flags
+        for (f, k) in held.reversed() {
+            acc.remove(f)
+            let e = CGEvent(keyboardEventSource: src, virtualKey: k, keyDown: false)!
+            e.flags = acc
+            post(e, to: nil)
+        }
+    }
 }
 
 func typeText(_ text: String, pid: pid_t?) {
@@ -312,6 +335,8 @@ func mouseClick(at p: CGPoint, double: Bool = false) {
         let up = CGEvent(mouseEventSource: src, mouseType: .leftMouseUp, mouseCursorPosition: p, mouseButton: .left)!
         down.setIntegerValueField(.mouseEventClickState, value: Int64(n))
         up.setIntegerValueField(.mouseEventClickState, value: Int64(n))
+        down.flags = []  // a click never carries modifiers unless asked
+        up.flags = []
         down.post(tap: .cghidEventTap)
         usleep(15_000)
         up.post(tap: .cghidEventTap)
