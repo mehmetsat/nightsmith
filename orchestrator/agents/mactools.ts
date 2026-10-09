@@ -51,10 +51,11 @@ export function macToolsServer(ctx: MacToolContext) {
     return { type: "image" as const, data: readFileSync(small).toString("base64"), mimeType: "image/png" };
   }
 
-  type Action = { action: "click" | "doubleclick" | "key" | "type"; id?: string; combo?: string; text?: string; delay_ms?: number };
+  type Action = { action: "click" | "doubleclick" | "key" | "type"; id?: string; combo?: string; text?: string; delay_ms?: number; global?: boolean };
   async function perform(a: Action) {
     if (a.delay_ms) await new Promise((r) => setTimeout(r, a.delay_ms));
-    if (a.action === "key") return ax(["key", a.combo ?? ""]);
+    // global: the app's own global hotkeys only fire from the system event stream, not from a key posted to the app.
+    if (a.action === "key") return ax(["key", a.combo ?? "", ...(a.global ? ["--global"] : [])]);
     if (a.action === "type") return ax(["type", a.id ?? "", a.text ?? ""]);
     return ax([a.action, a.id ?? ""]);
   }
@@ -126,6 +127,7 @@ export function macToolsServer(ctx: MacToolContext) {
               combo: z.string().optional(),
               text: z.string().optional(),
               delay_ms: z.number().optional(),
+              global: z.boolean().optional().describe("send the key to the whole system (needed for the app's global hotkeys)"),
             }))
             .optional(),
         },

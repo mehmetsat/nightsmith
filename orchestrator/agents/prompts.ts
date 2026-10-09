@@ -340,7 +340,7 @@ with test images. Do exactly this:
 1. Open the surface: send <open> with ax_key global=true, wait a second.
 2. screenshot with title "<title>" and label "sprint_still".
 3. Close it (send <open> again) and wait a second. Then record_frames with title "<title>", seconds 1.5,
-   n 12, and during = [{"action":"key","combo":"<open>"}] so the frames show it opening. If the
+   n 12, and during = [{"action":"key","combo":"<open>","global":true}] so the frames show it opening. If the
    window cannot be found while closed, say so in your reply (the designer must fix that) and record
    it closing instead.
 4. Close the surface. Reply DONE.
