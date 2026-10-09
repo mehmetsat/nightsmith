@@ -16,6 +16,7 @@ export interface SprintConfig {
   iterations: number;
   reference: string[];    // images of the best existing product (never copied, only compared)
   minScore: number;       // average rubric score needed to merge
+  brief?: string;         // design direction from the human (ideas, not fixed rules)
 }
 
 export interface SprintOutcome { merged: boolean; scores: number[][]; notes: string; protectedPath: string }
@@ -41,6 +42,7 @@ export async function designSprint(h: Harness, round: number, cfg: SprintConfig,
       rolePrompt: SPRINT_DESIGNER.replaceAll("<focus>", cfg.focus).replaceAll("<title>", cfg.title).replaceAll("$APP_NAME", app).replaceAll("<iteration>", String(i)),
       task: [
         `Iteration ${i} of ${cfg.iterations}. Surface: ${cfg.focus}.`,
+        ...(cfg.brief ? ["", "Design brief from the human. Treat these as direction, not fixed rules: build the ideas that work, and for any you drop, say why in your commit message.", cfg.brief] : []),
         "", "Reference images (Read them):", ...cfg.reference.map((p) => `- ${p}`),
         ...(critique ? ["", "Critique of your previous iteration (act on it):", critique] : []),
         ...(last.stills.length ? ["", "How your previous iteration looked:", ...last.stills.map((p) => `- ${p}`), ...last.frames.slice(0, 4).map((p) => `- ${p}`)] : []),
@@ -54,7 +56,7 @@ export async function designSprint(h: Harness, round: number, cfg: SprintConfig,
 
     const c = await h.agent({
       agent: "judge", round, model: models.sprint, rolePrompt: "You are an exacting design critic. Specific, visual, actionable.",
-      task: critiqueTask(cfg.focus, cfg.reference, last.stills, last.frames, i), builtinTools: ["Read"], macTools: false, writable: [], maxTurns: 25,
+      task: critiqueTask(cfg.focus, cfg.reference, last.stills, last.frames, i) + (cfg.brief ? `\n\nThe designer follows this brief from the human; judge how well its ideas land and which are missing:\n${cfg.brief}` : ""), builtinTools: ["Read"], macTools: false, writable: [], maxTurns: 25,
     });
     try {
       const v = JSON.parse(c.finalText.match(/\{[\s\S]*\}/)?.[0] ?? "{}");
