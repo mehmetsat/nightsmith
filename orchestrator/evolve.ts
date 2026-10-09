@@ -56,6 +56,7 @@ const { values: args } = parseArgs({
     "sprint-reference": { type: "string" },
     "sprint-min-score": { type: "string", default: "7" },
     "sprint-brief": { type: "string" },
+    "sprint-base": { type: "string" },
     "keep-panel": { type: "boolean", default: false },
   },
 });
@@ -365,6 +366,7 @@ async function main() {
           focus: args.sprint, title: args["sprint-title"] ?? args.sprint, open: args["sprint-open"] ?? "",
           iterations: Number(args["sprint-iterations"]), reference, minScore: Number(args["sprint-min-score"]),
           brief: args["sprint-brief"] && existsSync(args["sprint-brief"]) ? readFileSync(args["sprint-brief"], "utf8") : undefined,
+          base: args["sprint-base"],
         }, models);
         outcome(sp.notes);
         if (sp.merged) { st.protected = [...new Set([...(st.protected ?? []), sp.protectedPath])]; h.protectedPaths = st.protected; }

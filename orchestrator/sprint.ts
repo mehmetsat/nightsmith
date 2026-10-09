@@ -17,6 +17,7 @@ export interface SprintConfig {
   reference: string[];    // images of the best existing product (never copied, only compared)
   minScore: number;       // average rubric score needed to merge
   brief?: string;         // design direction from the human (ideas, not fixed rules)
+  base?: string;          // git ref to start the sprint from (continue an earlier sprint's branch)
 }
 
 export interface SprintOutcome { merged: boolean; scores: number[][]; notes: string; protectedPath: string }
@@ -29,7 +30,7 @@ export async function designSprint(h: Harness, round: number, cfg: SprintConfig,
   const branch = `sprint/r${round}`;
   const protectedPath = `Sources/${app}/Design`;
   mkdirSync(join(h.log.dir, "sprint"), { recursive: true });
-  await h.git("worktree", "add", "-q", "-b", branch, dir, "HEAD");
+  await h.git("worktree", "add", "-q", "-b", branch, dir, cfg.base ?? "HEAD");
   h.emit(round, "design", `design sprint: ${cfg.focus} (${cfg.iterations} iterations)`, { sprint: true, focus: cfg.focus, reference: cfg.reference.length });
 
   const scores: number[][] = [];
