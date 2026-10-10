@@ -11,7 +11,7 @@
 // Human feedback: write lines into runs/<run_id>/feedback.md at any time:
 //   veto I-4-2: too gimmicky      note: focus on keyboard flow next      pick design 2
 
-import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
 import { firstLine } from "./events.ts";
@@ -337,6 +337,7 @@ async function main() {
       h.emit(round, "round_start", `round ${round}`);
       readFeedback(round);
       criteria = parseCriteria(readFileSync(R("spec.md"), "utf8"));
+      h.criteriaCount = criteria.length;
       if (h.totalCost() >= cfg.budgetUsd) throw new Stop("budget", `estimated spend $${h.totalCost().toFixed(2)} reached the $${cfg.budgetUsd} cap`);
       await h.waitForWindow(cfg.windowCap, round);
 
@@ -347,6 +348,7 @@ async function main() {
       // A new note from the human is worth acting on now, not two rounds later.
       if (floorMet || round - st.lastReplanRound > cfg.replanEvery || st.notes.length) {
         criteria = await replan(round);
+        h.criteriaCount = criteria.length;
         added = st.replans.at(-1)!.added;
         emptyReplans = added.length ? 0 : emptyReplans + 1;
         if (emptyReplans >= 2) throw new Stop("converged", "two replans in a row added no criteria");
@@ -406,6 +408,7 @@ async function main() {
       buildErrors = null;
 
       await h.waitForWindow(cfg.windowCap, round);
+      const qaStart = Date.now();
       let ev: AgentOutcome = await h.evaluator(round);
       if (ev.screenLocked) {
         // A verdict from a locked screen would read as mass regression. Wait and test again.
@@ -415,6 +418,8 @@ async function main() {
       await h.sh("pkill", ["-x", appName]);
       h.snapshot("qa_report.md", round);
       try {
+        // A report QA did not write this round (it ran out of turns, or crashed) is stale: never score it.
+        if (!existsSync(R("qa_report.md")) || statSync(R("qa_report.md")).mtimeMs < qaStart) throw new Error(`qa_report.md was not written this round (evaluator ${ev.status})`);
         rec.score = scoreRound(criteria, parseQaReport(readFileSync(R("qa_report.md"), "utf8")));
         h.emit(round, "qa_verdict", `${rec.score.hard_pass}/${rec.score.hard_total} hard pass`, { ...rec.score });
       } catch (e) {

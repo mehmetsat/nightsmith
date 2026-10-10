@@ -172,6 +172,8 @@ export class Harness {
 
   /** True when the workspace came from an earlier run: round 1 then fixes, it does not build from scratch. */
   continuing = false;
+  /** Number of criteria in the current spec; QA's turn budget scales with it. */
+  criteriaCount = 0;
   /** Workspace-relative paths the generator may not write (design files a sprint owns). */
   protectedPaths: string[] = [];
 
@@ -191,7 +193,8 @@ export class Harness {
       agent: "evaluator", round, model: this.opts.models.evaluator, rolePrompt: EVALUATOR,
       task: evaluatorTask(round, this.opts.appName) + (extraTask ? "\n\n" + extraTask : ""),
       builtinTools: ["Bash", "Read", "Write", "Glob", "Grep"], macTools: true,
-      writable: [join(this.ws, "qa_report.md")], maxTurns: this.opts.evaluatorTurns,
+      // Turns scale with the spec: about 5 per criterion, never fewer than the configured floor.
+      writable: [join(this.ws, "qa_report.md")], maxTurns: Math.max(this.opts.evaluatorTurns, this.criteriaCount * 5),
     });
   }
 

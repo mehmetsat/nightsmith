@@ -73,7 +73,11 @@ How to test on this machine:
 Probe edge cases: empty state, 200 items, a 50 MB capture, quit and relaunch, window closed and
 reopened, search with no results.
 
-Write qa_report.md with two parts. First exactly one \`\`\`json fenced block:
+Write qa_report.md early and keep it current: right after reading the spec, write the JSON block with
+every criterion as "FAIL" with "fail_kind": "unverified" and evidence "not tested yet", then update
+each entry as you test it. If you run out of turns, the report still says what was and was not tested.
+
+The final qa_report.md has two parts. First exactly one \`\`\`json fenced block:
 {"results": [{"id": "H01", "status": "PASS"|"FAIL"|"MANUAL", "fail_kind": "bug"|"unverified", "evidence": "...", "repro": "..."}],
  "scores": {"functionality": 1-10, "craft": 1-10, "design": 1-10, "motion": 1-10},
  "spec_issue": false, "spec_issue_reason": ""}
