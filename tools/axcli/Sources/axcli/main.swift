@@ -493,6 +493,21 @@ case "pbimage":
     guard pb.writeObjects([image]) else { fail("could not write image to pasteboard") }
     emit(["ok": true, "change_count": pb.changeCount, "size": [Int(image.size.width), Int(image.size.height)]])
 
+case "move":
+    // Move the real pointer (for checks that depend on which screen holds it).
+    guard positional.count >= 3, let x = Double(positional[1]), let y = Double(positional[2]) else { fail("usage: axcli move <x> <y>  (global screen points, top-left origin)") }
+    let p = CGPoint(x: x, y: y)
+    CGWarpMouseCursorPosition(p)
+    CGEvent(mouseEventSource: CGEventSource(stateID: .hidSystemState), mouseType: .mouseMoved, mouseCursorPosition: p, mouseButton: .left)?.post(tap: .cghidEventTap)
+    emit(["ok": true, "at": [Int(x), Int(y)]])
+
+case "screens":
+    emit(NSScreen.screens.map { s -> [String: Any] in
+        let f = s.frame, main = NSScreen.screens.first!.frame
+        // Convert to top-left origin global coordinates like CGWindow bounds.
+        return ["name": s.localizedName, "frame": [Int(f.minX), Int(main.height - f.maxY), Int(f.width), Int(f.height)]]
+    })
+
 case "pbinfo":
     // What is on the pasteboard now: types, image size and a hash of the image data.
     let pb = NSPasteboard.general
