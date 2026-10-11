@@ -58,23 +58,44 @@ Details: [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md).
 
 ## Results
 
-The test app is **ShotBox**: it keeps every screenshot and finds them by the text inside them.
+The test app is **ShotBox**: a menubar app for screenshots you copy, not save. It keeps every
+capture and finds it by the text inside it. Its source is in [apps/shotbox](apps/shotbox).
 
 | Run | Rounds | Hard criteria | Cost |
 |---|---|---|---|
 | Classic loop | 2 | 28/28, then stops | $10 |
 | Self-improving loop | 3 | 28 → 35, with a new design | $22 |
+| Overnight runs + design sprints | 14 | 35 → 54, 44 pass | about $120 |
 
 The research added ideas that were not in the brief: the source app on every card, ticket ids and
 URLs found by OCR as clickable chips, and search results that show why they matched.
 
+The Clothesline came from a human remark and one reference app ([Tendedero](https://github.com/alejandrobujan/tendedero)).
+Move the pointer to the top of any screen and your recent captures drop down on a rope.
+Click one to copy it.
+
 <br>
 
 <div align="center">
-<img src="docs/images/shotbox.png" alt="ShotBox, built by the agents" width="680">
+<img src="docs/images/clothesline.png" alt="The Clothesline: recent captures hang from a rope under the menu bar" width="860">
+<br>
+<sub>The Clothesline, designed by agents in three sprints.</sub>
+<br><br>
+<img src="docs/images/shotbox.png" alt="The ShotBox library window" width="640">
 </div>
 
 <br>
+
+## Try ShotBox
+
+Download the DMG from [Releases](https://github.com/mehmetsat/nightsmith/releases), or build it:
+
+```bash
+scripts/release.sh          # writes dist/ShotBox-0.1.0.dmg
+```
+
+The DMG is not notarized yet. On first open, right-click ShotBox in Applications and choose
+**Open**, or allow it under System Settings → Privacy & Security.
 
 ## Quick start
 
